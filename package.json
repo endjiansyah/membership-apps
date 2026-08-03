@@ -11,9 +11,15 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
+    "@prisma/client": "^7.9.1",
     "bootstrap": "^5.3.8",
     "nuxt": "^4.5.1",
+    "qrcode": "^1.5.4",
     "vue": "^3.5.40",
     "vue-router": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.6",
+    "prisma": "^7.9.1"
   }
 }

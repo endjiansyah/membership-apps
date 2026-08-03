@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUPER_ADMIN
+  PETUGAS
+}
+
+enum EntryMethod {
+  QR_SCAN
+  MANUAL
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(PETUGAS)
+  
+  logs      AttendanceLog[] 
+  createdAt DateTime @default(now())
+}
+
+model DynamicField {
+  id          Int      @id @default(autoincrement())
+  label       String   
+  fieldKey    String   @unique 
+  type        String   
+  options     Json?    
+  isRequired  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Member {
+  id           Int      @id @default(autoincrement())
+  uuid         String   @unique @default(uuid()) 
+  name         String
+  email        String?
+  phoneNumber  String?
+  photoPath    String?
+  isActive     Boolean  @default(true)
+  
+  dynamicData  Json?    
+  
+  logs         AttendanceLog[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AttendanceLog {
+  id          Int      @id @default(autoincrement())
+  memberId    Int
+  member      Member   @relation(fields: [memberId], references: [id])
+  scannedById Int
+  scannedBy   User     @relation(fields: [scannedById], references: [id])
+  scannedAt   DateTime @default(now())
+  
+  entryMethod EntryMethod @default(QR_SCAN)
+  notes       String?     
+  
+  deletedAt   DateTime?   
+}
