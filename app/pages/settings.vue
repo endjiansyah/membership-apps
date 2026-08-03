@@ -49,8 +49,7 @@
             <table class="table table-hover mb-0">
               <thead class="table-light">
                 <tr>
-                  <th>Label</th>
-                  <th>Field Key (Sistem)</th>
+                  <th>Field</th>
                   <th>Tipe</th>
                   <th>Wajib?</th>
                   <th class="text-center">Aksi</th>
@@ -62,7 +61,6 @@
                 </tr>
                 <tr v-for="field in fields" :key="field.id">
                   <td class="fw-bold">{{ field.label }}</td>
-                  <td><code class="text-secondary">{{ field.fieldKey }}</code></td>
                   <td>
                     <span class="badge bg-secondary">{{ field.type }}</span>
                   </td>
