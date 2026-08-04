@@ -11,7 +11,8 @@ export default defineEventHandler(async (event) => {
       email: true,
       phoneNumber: true,
       isActive: true,
-      createdAt: true
+      createdAt: true,
+      dynamicData: true // <--- INI KUNCINYA AGAR MUNCUL DI MODAL
     }
   })
   
