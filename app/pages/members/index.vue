@@ -49,7 +49,7 @@
           <p class="text-muted small mb-3">Tunjukkan QR ini saat Presensi</p>
           
           <div class="bg-light p-2 rounded-3 mb-3 d-inline-block border">
-            <img :src="qrImageUrl" alt="QR Code Member" class="img-fluid rounded" v-if="qrImageUrl" />
+            <img :src="qrImageUrl" alt="QR Code Member" class="rounded" style="width: 250px; height: 250px; display: block;" v-if="qrImageUrl" />
             <div v-else class="spinner-border text-primary my-4" role="status"></div>
           </div>
 
@@ -78,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import QRCode from 'qrcode'
 
 const { data: members, pending } = await useFetch('/api/members', { server: false })
@@ -103,30 +103,68 @@ const showQR = async (member) => {
   }
 }
 
-// Fungsi baru untuk memotret DOM menjadi gambar
 const downloadCard = async () => {
-  if (!qrCardRef.value) return
+  if (!selectedMember.value || !qrImageUrl.value) return
   isDownloading.value = true
-  
+
   try {
-    // Import dinamis agar tidak membebani render awal aplikasi
-    const html2canvas = (await import('html2canvas')).default
-    
-    // Proses mengubah elemen ref menjadi canvas (gambar)
-    const canvas = await html2canvas(qrCardRef.value, {
-      scale: 3, // Skala resolusi tinggi agar gambar tidak pecah
-      backgroundColor: '#ffffff' // Pastikan background putih
+    // 1. Kanvas ukuran vertikal (800 x 1050 px)
+    const canvas = document.createElement('canvas')
+    canvas.width = 800
+    canvas.height = 1050
+    const ctx = canvas.getContext('2d')
+
+    // 2. Background Putih Bersih (Tanpa Border Luar)
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    // 3. Teks Nama Member di Bagian Atas
+    ctx.fillStyle = '#0f172a'
+    ctx.font = 'bold 56px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText(selectedMember.value.name, canvas.width / 2, 120)
+
+    // 4. Sub-teks Instruksi
+    ctx.fillStyle = '#64748b'
+    ctx.font = '26px sans-serif'
+    ctx.fillText('Tunjukkan QR Code ini saat Presensi', canvas.width / 2, 180)
+
+    // 5. Muat dan Gambar QR Code dengan Ukuran Hampir Full Kanan-Kiri (620 x 620 px)
+    await new Promise((resolve, reject) => {
+      const qrImage = new Image()
+      qrImage.crossOrigin = 'anonymous'
+      qrImage.onload = () => {
+        // Koordinat X = 90, Lebar = 620 (Mepet ke pinggir kanan-kiri kanvas lebar 800)
+        ctx.drawImage(qrImage, 90, 240, 620, 620)
+        resolve()
+      }
+      qrImage.onerror = reject
+      qrImage.src = qrImageUrl.value
     })
-    
-    // Buat link download
+
+    // 6. Garis Pemisah Tipis
+    ctx.strokeStyle = '#e2e8f0'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(90, 900)
+    ctx.lineTo(710, 900)
+    ctx.stroke()
+
+    // 7. Informasi ID / UUID Member di Bagian Bawah
+    ctx.fillStyle = '#475569'
+    ctx.font = '22px monospace'
+    ctx.textAlign = 'center'
+    ctx.fillText(`ID: ${selectedMember.value.uuid}`, canvas.width / 2, 960)
+
+    // 8. Eksekusi Download File PNG
     const url = canvas.toDataURL('image/png')
     const link = document.createElement('a')
     link.href = url
     link.download = `Member_Card_${selectedMember.value.name.replace(/\s+/g, '_')}.png`
     link.click()
   } catch (error) {
-    console.error('Gagal mengunduh kartu:', error)
-    alert('Terjadi kesalahan saat membuat gambar.')
+    console.error('Gagal membuat gambar kartu:', error)
+    alert('Terjadi kesalahan saat mengunduh kartu.')
   } finally {
     isDownloading.value = false
   }
