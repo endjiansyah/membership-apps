@@ -1,44 +1,44 @@
-<!-- layouts/default.vue -->
 <template>
   <div>
-    <!-- Navbar Bootstrap -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
       <div class="container">
         <NuxtLink class="navbar-brand fw-bold" to="/">Admin Membership</NuxtLink>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-          <span class="navbar-toggler-icon"></span> 
+        
+        <!-- Tombol Hamburger (Vue Action) -->
+        <button class="navbar-toggler" type="button" @click="isMenuOpen = !isMenuOpen">
+          <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <NuxtLink class="nav-link" active-class="active" to="/">Dashboard</NuxtLink>
+        
+        <!-- Kontainer Menu (Vue Class Binding) -->
+        <div class="collapse navbar-collapse" :class="{ 'show': isMenuOpen }">
+          <ul class="navbar-nav ms-auto text-center mt-3 mt-lg-0">
+            <li class="nav-item mb-2 mb-lg-0">
+              <NuxtLink class="nav-link" active-class="active" to="/" @click="isMenuOpen = false">Dashboard</NuxtLink>
             </li>
-            <li class="nav-item">
-              <NuxtLink class="nav-link" active-class="active" to="/members">Data Member</NuxtLink>
+            <li class="nav-item mb-2 mb-lg-0">
+              <NuxtLink class="nav-link" active-class="active" to="/members" @click="isMenuOpen = false">Data Member</NuxtLink>
             </li>
-            <li class="nav-item">
-              <NuxtLink class="nav-link text-warning fw-bold" active-class="active" to="/scanner">
+            <li class="nav-item mb-2 mb-lg-0">
+              <NuxtLink class="nav-link text-warning fw-bold bg-dark rounded px-3" active-class="active" to="/scanner" @click="isMenuOpen = false">
                 📷 Scanner
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink class="nav-link" active-class="active" to="/settings">Pengaturan Form</NuxtLink>
+              <NuxtLink class="nav-link" active-class="active" to="/settings" @click="isMenuOpen = false">Pengaturan Form</NuxtLink>
             </li>
           </ul>
         </div>
       </div>
     </nav>
-
-    <!-- Konten Halaman Akan Muncul di Sini -->
     <main class="container py-4">
       <slot />
     </main>
   </div>
 </template>
 
-<style scoped>
-/* Sedikit styling tambahan jika diperlukan */
-.navbar-brand {
-  letter-spacing: 1px;
-}
-</style>
+<script setup>
+import { ref } from 'vue'
+
+// State untuk mengontrol buka-tutup navbar mobile
+const isMenuOpen = ref(false)
+</script>

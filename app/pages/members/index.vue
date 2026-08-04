@@ -38,23 +38,38 @@
     </div>
 
     <!-- Popup / Overlay Tampil QR Code -->
-    <!-- Dibuat custom agar ringan di mobile dan terhindar dari bug Bootstrap JS -->
     <div v-if="selectedMember" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex justify-content-center align-items-center" style="z-index: 9999;" @click.self="selectedMember = null">
+      
+      <!-- KITA BUNGKUS DENGAN ref="qrCardRef" AGAR BISA DIFOTO -->
       <div class="card border-0 rounded-4 p-4 text-center mx-3 shadow-lg" style="max-width: 350px; width: 100%;">
-        <h4 class="fw-bold mb-1">{{ selectedMember.name }}</h4>
-        <p class="text-muted small mb-3">Scan QR ini untuk Presensi</p>
         
-        <!-- Gambar QR Code -->
-        <div class="bg-light p-2 rounded-3 mb-3 d-inline-block border">
-          <img :src="qrImageUrl" alt="QR Code Member" class="img-fluid rounded" v-if="qrImageUrl" />
-          <div v-else class="spinner-border text-primary my-4" role="status"></div>
-        </div>
+        <!-- AREA YANG AKAN MASUK KE DALAM GAMBAR DOWNLOAD -->
+        <div ref="qrCardRef" class="p-3 bg-white rounded-3">
+          <h4 class="fw-bold mb-1">{{ selectedMember.name }}</h4>
+          <p class="text-muted small mb-3">Tunjukkan QR ini saat Presensi</p>
+          
+          <div class="bg-light p-2 rounded-3 mb-3 d-inline-block border">
+            <img :src="qrImageUrl" alt="QR Code Member" class="img-fluid rounded" v-if="qrImageUrl" />
+            <div v-else class="spinner-border text-primary my-4" role="status"></div>
+          </div>
 
-        <p class="text-muted small mb-4 font-monospace" style="font-size: 11px;">
-          UUID: {{ selectedMember.uuid }}
-        </p>
+          <p class="text-muted small mb-1 font-monospace" style="font-size: 11px;">
+            ID: {{ selectedMember.uuid }}
+          </p>
+        </div>
+        <!-- BATAS AREA GAMBAR -->
+
+        <!-- Tombol Aksi (Tidak ikut terfoto) -->
+        <button 
+          v-if="qrImageUrl" 
+          @click="downloadCard" 
+          class="btn btn-success w-100 rounded-pill fw-bold mb-2 shadow-sm py-2"
+          :disabled="isDownloading"
+        >
+          {{ isDownloading ? 'Memproses...' : '📥 Download Kartu' }}
+        </button>
         
-        <button class="btn btn-secondary w-100 rounded-pill fw-bold" @click="selectedMember = null">
+        <button class="btn btn-light w-100 rounded-pill fw-bold py-2 border" @click="selectedMember = null">
           Tutup Layar
         </button>
       </div>
@@ -64,33 +79,56 @@
 
 <script setup>
 import { ref } from 'vue'
-import QRCode from 'qrcode' // Import library bawaan Anda
+import QRCode from 'qrcode'
 
-// Fetch otomatis data member dari API yang baru kita buat
 const { data: members, pending } = await useFetch('/api/members', { server: false })
 
-// State untuk mengatur popup QR Code
 const selectedMember = ref(null)
 const qrImageUrl = ref('')
+const qrCardRef = ref(null) // Penanda area yang akan di-screenshot
+const isDownloading = ref(false)
 
-// Fungsi ketika tombol kamera/QR diklik
 const showQR = async (member) => {
   selectedMember.value = member
-  qrImageUrl.value = '' // Reset gambar sebelum memuat ulang
+  qrImageUrl.value = ''
   
   try {
-    // Ubah text (UUID) menjadi gambar format Base64 secara instan
     qrImageUrl.value = await QRCode.toDataURL(member.uuid, {
       width: 250,
       margin: 2,
-      color: {
-        dark: '#000000', // Warna QR
-        light: '#ffffff' // Background QR
-      }
+      color: { dark: '#000000', light: '#ffffff' }
     })
   } catch (err) {
     console.error('Gagal membuat QR:', err)
-    alert('Sistem gagal memuat gambar QR Code.')
+  }
+}
+
+// Fungsi baru untuk memotret DOM menjadi gambar
+const downloadCard = async () => {
+  if (!qrCardRef.value) return
+  isDownloading.value = true
+  
+  try {
+    // Import dinamis agar tidak membebani render awal aplikasi
+    const html2canvas = (await import('html2canvas')).default
+    
+    // Proses mengubah elemen ref menjadi canvas (gambar)
+    const canvas = await html2canvas(qrCardRef.value, {
+      scale: 3, // Skala resolusi tinggi agar gambar tidak pecah
+      backgroundColor: '#ffffff' // Pastikan background putih
+    })
+    
+    // Buat link download
+    const url = canvas.toDataURL('image/png')
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `Member_Card_${selectedMember.value.name.replace(/\s+/g, '_')}.png`
+    link.click()
+  } catch (error) {
+    console.error('Gagal mengunduh kartu:', error)
+    alert('Terjadi kesalahan saat membuat gambar.')
+  } finally {
+    isDownloading.value = false
   }
 }
 </script>
