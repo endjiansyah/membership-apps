@@ -21,12 +21,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'QR Code tidak terdaftar di sistem!' })
   }
 
-  // Waktu saat ini untuk perbandingan
   const now = new Date()
   const currentMonth = now.getMonth()
   const currentYear = now.getFullYear()
+  const currentDate = now.getDate()
 
-  // Kalkulasi Statistik
   const totalVisits = member.logs?.length || 0
   const lastVisit = totalVisits > 0 ? member.logs[0]?.scannedAt : null
   
@@ -40,17 +39,25 @@ export default defineEventHandler(async (event) => {
     return logDate.getFullYear() === currentYear
   }).length || 0
 
-  // Kembalikan semua data yang dibutuhkan frontend
+  // Cek apakah ada kunjungan di tanggal, bulan, dan tahun yang persis sama dengan hari ini
+  const visitedToday = member.logs?.some(log => {
+    const logDate = new Date(log.scannedAt)
+    return logDate.getDate() === currentDate && 
+           logDate.getMonth() === currentMonth && 
+           logDate.getFullYear() === currentYear
+  }) || false
+
   return {
     uuid: member.uuid,
     name: member.name,
     isActive: member.isActive,
     email: member.email,
     phoneNumber: member.phoneNumber,
-    dynamicData: member.dynamicData, // Pastikan data dinamis terkirim
+    dynamicData: member.dynamicData,
     totalVisits,
     visitsThisMonth,
     visitsThisYear,
-    lastVisit
+    lastVisit,
+    visitedToday // <-- Kirim status ini ke frontend
   }
 })

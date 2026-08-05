@@ -1,15 +1,13 @@
-// server/api/attendance/scan.post.ts
 import { prisma } from '../../utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { uuid } = body
+  const { uuid, activateMembership } = body
 
   if (!uuid) {
     throw createError({ statusCode: 400, statusMessage: 'QR Code tidak terbaca dengan benar.' })
   }
 
-  // 1. Cek validitas UUID
   const member = await prisma.member.findUnique({
     where: { uuid: uuid }
   })
@@ -18,12 +16,14 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'QR Code tidak terdaftar di sistem!' })
   }
 
-  // 2. CEK STATUS AKTIF (Baru ditambahkan sesuai request)
-  if (!member.isActive) {
-    throw createError({ statusCode: 403, statusMessage: 'Gagal! Member ini berstatus Non-Aktif.' })
+  // Jika tombol "Aktifkan Membership" ditekan di frontend
+  if (activateMembership && !member.isActive) {
+    await prisma.member.update({
+      where: { id: member.id },
+      data: { isActive: true }
+    })
   }
 
-  // 3. User / Petugas dummy
   let petugas = await prisma.user.findFirst()
   if (!petugas) {
     petugas = await prisma.user.create({
@@ -36,7 +36,6 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // 4. Masukkan data ke tabel log
   const log = await prisma.attendanceLog.create({
     data: {
       memberId: member.id,
