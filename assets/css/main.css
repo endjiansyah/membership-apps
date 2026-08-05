@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap');
+
+/* 1. Paksa Background Utama Jadi Deep Coffee */
+body {
+  background-color: #120D0B !important;
+  color: #ffffff !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* 2. Paksa bg-dark Jadi Mocha Layer */
+.bg-dark {
+  background-color: #1C1512 !important;
+}
+
+/* 3. Paksa btn-primary Jadi Burned Amber */
+.btn-primary {
+  background-color: #D97706 !important;
+  border-color: #D97706 !important;
+  color: #000000 !important;
+}
+.btn-primary:hover {
+  background-color: #b36205 !important;
+  border-color: #b36205 !important;
+}
+
+/* 4. Paksa text-primary Jadi Burned Amber */
+.text-primary {
+  color: #D97706 !important;
+}
+
+/* 5. Ganti Warna Border Bawaan Bootstrap */
+.border, .border-bottom {
+  border-color: #2D231E !important;
+}
+
+/* 6. Utility Tambahan (Sesuai Desain Anda) */
+.tracking-tight { letter-spacing: -0.025em; }
+.tracking-widest { letter-spacing: 0.1em; }
