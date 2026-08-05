@@ -9,13 +9,12 @@
       </span>
     </div>
 
-    <!-- AREA KAMERA / SCANNER (Dibuat Persegi 1:1) -->
+    <!-- AREA KAMERA / SCANNER -->
     <div v-show="!scannedMember" class="bg-black rounded-4 overflow-hidden mb-4 position-relative shadow">
       <div class="p-2 bg-dark text-center border-bottom border-secondary border-opacity-25">
         <small class="fw-bold text-secondary text-uppercase" style="font-size: 0.75rem;">Arahkan QR Code ke Kamera</small>
       </div>
       
-      <!-- Wadah kamera dipaksa menjadi persegi (aspect-ratio: 1/1) -->
       <div id="reader" class="w-100 bg-black" style="aspect-ratio: 1 / 1;"></div>
       
       <div v-if="isLoading" class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex flex-column justify-content-center align-items-center" style="z-index: 10;">
@@ -24,79 +23,88 @@
       </div>
     </div>
 
-    <!-- KARTU HASIL SCAN -->
+    <!-- KARTU HASIL SCAN (PROFIL & AKSI) -->
     <div v-if="scannedMember" class="card border border-secondary border-opacity-25 shadow-lg rounded-4 bg-dark text-white mb-3">
       <div class="card-body p-4">
         
-        <!-- Status & Nama Member -->
+        <!-- Area Avatar & Identitas Utama -->
         <div class="text-center mb-4">
-          <span v-if="scannedMember.isActive" class="badge bg-success mb-2 px-3 py-2 rounded-pill shadow-sm">Aktif</span>
-          <span v-else class="badge bg-danger mb-2 px-3 py-2 rounded-pill shadow-sm">Non-Aktif</span>
-          <h3 class="fw-bold mb-1" :class="scannedMember.isActive ? 'text-white' : 'text-danger'">{{ scannedMember.name }}</h3>
-          <p class="text-secondary small mb-0 font-monospace">ID: {{ scannedMember.uuid?.slice(0, 8) }}...</p>
+          <div class="d-inline-flex justify-content-center align-items-center bg-dark border border-secondary border-opacity-25 text-primary mb-3 shadow-sm" style="width: 90px; height: 90px; border-radius: 24px; overflow: hidden;">
+            <img v-if="scannedMember.photoPath" :src="scannedMember.photoPath" alt="Profile" class="w-100 h-100 object-fit-cover" />
+            <span v-else class="fs-2 fw-bold text-uppercase">{{ getInitials(scannedMember.name) }}</span>
+          </div>
+          
+          <div class="mb-2">
+            <span class="badge px-3 py-1 rounded-pill" :class="scannedMember.isActive ? 'bg-success text-white' : 'bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25'">
+              {{ scannedMember.isActive ? 'ACTIVE' : 'INACTIVE' }}
+            </span>
+          </div>
+
+          <h4 class="fw-bold text-white mb-1">{{ scannedMember.name }}</h4>
+          <p class="text-secondary small font-monospace mb-0">ID: {{ scannedMember.uuid }}</p>
         </div>
 
-        <div v-if="scannedMember.visitedToday" class="alert alert-warning py-2 px-3 rounded-3 mb-3 fw-bold small text-center shadow-sm">
-          Pemberitahuan: Anggota ini sudah melakukan check-in hari ini.
+        <!-- Peringatan Kunjungan Ganda -->
+        <div v-if="scannedMember.visitedToday" class="alert bg-warning bg-opacity-25 border border-warning text-warning py-2 px-3 rounded-3 mb-4 fw-bold small text-center shadow-sm">
+          ⚠️ Anggota ini sudah melakukan check-in hari ini.
         </div>
 
-        <!-- STATISTIK GRID -->
-        <div class="row g-2 mb-4">
-          <div class="col-6">
-            <div class="bg-body p-3 rounded-4 border border-secondary border-opacity-25 h-100 d-flex flex-column justify-content-center">
-              <small class="text-secondary d-block mb-1" style="font-size: 0.7rem;">Terakhir Hadir</small>
-              <span class="fw-bold text-primary" style="font-size: 0.8rem;">
-                {{ scannedMember.lastVisit ? new Date(scannedMember.lastVisit).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Belum Ada' }}
-              </span>
+        <!-- Statistik Kehadiran -->
+        <div class="mb-4">
+          <small class="text-secondary fw-bold mb-2 d-block text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">Statistik Kehadiran</small>
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="bg-black p-3 rounded-4 border border-secondary border-opacity-25 h-100 shadow-sm d-flex flex-column justify-content-center">
+                <small class="text-secondary d-block mb-1" style="font-size: 0.7rem;">Terakhir Hadir</small>
+                <span class="fw-bold text-primary" style="font-size: 0.8rem;">
+                  {{ scannedMember.lastVisit ? new Date(scannedMember.lastVisit).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Belum Ada' }}
+                </span>
+              </div>
             </div>
-          </div>
-          <div class="col-6">
-            <div class="bg-body p-3 rounded-4 border border-secondary border-opacity-25 h-100 d-flex flex-column justify-content-center">
-              <small class="text-secondary d-block mb-1" style="font-size: 0.7rem;">Bulan Ini</small>
-              <span class="fw-bold fs-4 text-primary">{{ scannedMember.visitsThisMonth }}<small class="fs-6">x</small></span>
+            <div class="col-6">
+              <div class="bg-black p-3 rounded-4 border border-secondary border-opacity-25 h-100 shadow-sm d-flex flex-column justify-content-center">
+                <small class="text-secondary d-block mb-1" style="font-size: 0.7rem;">Bulan Ini</small>
+                <span class="fw-bold fs-5 text-white">{{ scannedMember.visitsThisMonth }}<small class="fs-6 text-secondary">x</small></span>
+              </div>
             </div>
-          </div>
-          <div class="col-6">
-            <div class="bg-body p-3 rounded-4 border border-secondary border-opacity-25 h-100 d-flex flex-column justify-content-center">
-              <small class="text-secondary d-block mb-1" style="font-size: 0.7rem;">Tahun Ini</small>
-              <span class="fw-bold fs-4 text-primary">{{ scannedMember.visitsThisYear }}<small class="fs-6">x</small></span>
+            <div class="col-6">
+              <div class="bg-black p-3 rounded-4 border border-secondary border-opacity-25 h-100 shadow-sm d-flex flex-column justify-content-center">
+                <small class="text-secondary d-block mb-1" style="font-size: 0.7rem;">Tahun Ini</small>
+                <span class="fw-bold fs-5 text-white">{{ scannedMember.visitsThisYear }}<small class="fs-6 text-secondary">x</small></span>
+              </div>
             </div>
-          </div>
-          <div class="col-6">
-            <div class="bg-body p-3 rounded-4 border border-secondary border-opacity-25 h-100 d-flex flex-column justify-content-center">
-              <small class="text-secondary d-block mb-1" style="font-size: 0.7rem;">Total Keseluruhan</small>
-              <span class="fw-bold fs-4 text-primary">{{ scannedMember.totalVisits }}<small class="fs-6">x</small></span>
+            <div class="col-6">
+              <div class="bg-black p-3 rounded-4 border border-secondary border-opacity-25 h-100 shadow-sm d-flex flex-column justify-content-center">
+                <small class="text-secondary d-block mb-1" style="font-size: 0.7rem;">Total Keseluruhan</small>
+                <span class="fw-bold fs-5 text-white">{{ scannedMember.totalVisits }}<small class="fs-6 text-secondary">x</small></span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Tombol Toggle Detail -->
-        <div class="text-center mb-3">
-          <button @click="showDetails = !showDetails" class="btn btn-sm btn-link text-decoration-none fw-bold text-primary p-0">
-            {{ showDetails ? 'Tutup Detail' : 'Lihat Detail Lengkap' }}
-          </button>
-        </div>
-
-        <!-- Detail Tambahan -->
-        <div v-if="showDetails" class="text-start mb-4 bg-body p-3 rounded-4 border border-secondary border-opacity-25 shadow-sm" style="font-size: 0.85rem;">
-          <div v-if="scannedMember.phoneNumber" class="mb-2">
-            <span class="text-secondary d-block" style="font-size: 0.7rem;">Nomor Telepon</span>
-            <span class="fw-bold text-white">{{ scannedMember.phoneNumber }}</span>
-          </div>
-          <div v-if="scannedMember.email" class="mb-2">
-            <span class="text-secondary d-block" style="font-size: 0.7rem;">Email</span>
-            <span class="fw-bold text-white">{{ scannedMember.email }}</span>
-          </div>
-          <template v-if="scannedMember.dynamicData">
-            <div v-for="(value, key) in parseDynamicData(scannedMember.dynamicData)" :key="key" class="mb-2">
-              <span class="text-secondary d-block" style="font-size: 0.7rem;">{{ key }}</span>
-              <span class="fw-bold text-white">{{ value || '-' }}</span>
+        <!-- Informasi Member -->
+        <div class="mb-4">
+          <small class="text-secondary fw-bold mb-2 d-block text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">Member Information</small>
+          <div class="card bg-black border border-secondary border-opacity-25 rounded-4 overflow-hidden shadow-sm">
+            <div v-if="scannedMember.phoneNumber" class="p-3 border-bottom border-secondary border-opacity-25">
+              <small class="text-secondary d-block mb-1" style="font-size: 0.75rem;">Phone Number</small>
+              <span class="fw-bold text-white">{{ scannedMember.phoneNumber }}</span>
             </div>
-          </template>
+            <div v-if="scannedMember.email" class="p-3 border-bottom border-secondary border-opacity-25">
+              <small class="text-secondary d-block mb-1" style="font-size: 0.75rem;">Email Address</small>
+              <span class="fw-bold text-white">{{ scannedMember.email }}</span>
+            </div>
+            <template v-if="scannedMember.dynamicData">
+              <div v-for="(value, key, index) in parseDynamicData(scannedMember.dynamicData)" :key="key" class="p-3" :class="{ 'border-bottom border-secondary border-opacity-25': index !== Object.keys(parseDynamicData(scannedMember.dynamicData)).length - 1 }">
+                <small class="text-secondary d-block mb-1" style="font-size: 0.75rem;">{{ key }}</small>
+                <span class="fw-bold text-white">{{ value || '-' }}</span>
+              </div>
+            </template>
+          </div>
         </div>
 
-        <!-- TOMBOL AKSI UTAMA -->
-        <div class="d-flex flex-column gap-2">
+        <!-- Tombol Aksi Utama -->
+        <div class="d-flex flex-column gap-2 mt-4 pt-2 border-top border-secondary border-opacity-25">
           <template v-if="!scannedMember.isActive">
             <button @click="modal.step = 'CONFIRM_ACTIVATE'" class="btn btn-success btn-lg w-100 fw-bold rounded-pill shadow py-3">
               Aktivasi Membership
@@ -108,11 +116,11 @@
 
           <template v-else>
             <button @click="checkDoubleVisitAndExecute" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow py-3 text-dark">
-              Catat Check-in
+              Catat Kehadiran (Scan)
             </button>
           </template>
           
-          <button @click="resetScanner" class="btn btn-outline-secondary w-100 fw-bold rounded-pill py-3 text-white mt-1">
+          <button @click="resetScanner" class="btn btn-outline-secondary w-100 fw-bold rounded-pill py-3 text-white mt-1 border-secondary border-opacity-50">
             Batal & Scan Ulang
           </button>
         </div>
@@ -120,8 +128,8 @@
       </div>
     </div>
 
-    <!-- MODAL KONFIRMASI -->
-    <div v-if="modal.step !== ''" class="position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-75 d-flex justify-content-center align-items-center px-3" style="z-index: 1060;">
+    <!-- MODAL KONFIRMASI SMART FLOW -->
+    <div v-if="modal.step !== ''" class="position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-75 d-flex justify-content-center align-items-center px-3" style="z-index: 1060; backdrop-filter: blur(4px);">
       <div class="card border border-secondary border-opacity-50 bg-dark rounded-4 p-4 text-center shadow-lg text-white w-100" style="max-width: 350px;">
         
         <template v-if="modal.step === 'CONFIRM_NONACTIVE_RECORD'">
@@ -130,7 +138,7 @@
           <div class="d-flex flex-column gap-2">
             <button @click="modal.step = 'CONFIRM_ACTIVATE'" class="btn btn-success fw-bold rounded-pill py-2 shadow-sm">Aktifkan Dulu</button>
             <button @click="checkDoubleVisitAndExecute" class="btn btn-outline-danger fw-bold rounded-pill py-2">Tetap Catat Check-in</button>
-            <button @click="modal.step = ''" class="btn btn-outline-secondary fw-bold rounded-pill py-2 text-white">Batal</button>
+            <button @click="modal.step = ''" class="btn btn-outline-secondary fw-bold rounded-pill py-2 text-white border-secondary border-opacity-50">Batal</button>
           </div>
         </template>
 
@@ -141,7 +149,7 @@
             <button @click="executeActivation" class="btn btn-success fw-bold rounded-pill py-2 shadow-sm" :disabled="isProcessing">
               {{ isProcessing ? 'Memproses...' : 'Ya, Aktifkan' }}
             </button>
-            <button @click="modal.step = ''" class="btn btn-outline-secondary fw-bold rounded-pill py-2 text-white" :disabled="isProcessing">Batal</button>
+            <button @click="modal.step = ''" class="btn btn-outline-secondary fw-bold rounded-pill py-2 text-white border-secondary border-opacity-50" :disabled="isProcessing">Batal</button>
           </div>
         </template>
 
@@ -150,7 +158,7 @@
           <p class="text-secondary small mb-4">Apakah Anda ingin langsung mencatat kehadiran anggota ini?</p>
           <div class="d-flex flex-column gap-2">
             <button @click="checkDoubleVisitAndExecute" class="btn btn-primary fw-bold rounded-pill py-2 shadow-sm text-dark">Catat Kehadiran</button>
-            <button @click="resetScanner" class="btn btn-outline-secondary fw-bold rounded-pill py-2 text-white">Selesai</button>
+            <button @click="resetScanner" class="btn btn-outline-secondary fw-bold rounded-pill py-2 text-white border-secondary border-opacity-50">Selesai</button>
           </div>
         </template>
 
@@ -161,7 +169,7 @@
             <button @click="executeRecord" class="btn btn-warning fw-bold rounded-pill py-2 shadow-sm text-dark" :disabled="isProcessing">
               {{ isProcessing ? 'Memproses...' : 'Ya, Catat Lagi' }}
             </button>
-            <button @click="modal.step = ''" class="btn btn-outline-secondary fw-bold rounded-pill py-2 text-white" :disabled="isProcessing">Batal</button>
+            <button @click="modal.step = ''" class="btn btn-outline-secondary fw-bold rounded-pill py-2 text-white border-secondary border-opacity-50" :disabled="isProcessing">Batal</button>
           </div>
         </template>
 
@@ -177,10 +185,16 @@ import { ref, onMounted, onUnmounted } from 'vue'
 const scannedMember = ref(null)
 const isLoading = ref(false)
 const isProcessing = ref(false)
-const showDetails = ref(false)
 let html5QrcodeScanner = null
 
 const modal = ref({ step: '' }) 
+
+const getInitials = (name) => {
+  if (!name) return '?'
+  const words = name.trim().split(' ')
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase()
+  return name.substring(0, 2).toUpperCase()
+}
 
 const parseDynamicData = (data) => {
   if (!data) return {}
@@ -198,7 +212,6 @@ const startScanner = async () => {
   const config = { 
     fps: 10, 
     aspectRatio: 1.0,
-    // Membuat ukuran kotak scan responsif: mengambil 85% dari layar kamera
     qrbox: (viewfinderWidth, viewfinderHeight) => {
       const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
       const dynamicSize = Math.floor(minEdgeSize * 0.85);
@@ -221,7 +234,6 @@ const startScanner = async () => {
 
 const fetchMemberData = async (uuid) => {
   isLoading.value = true
-  showDetails.value = false
   modal.value.step = ''
   try {
     const response = await $fetch(`/api/attendance/check?uuid=${uuid}`)
@@ -278,7 +290,6 @@ const executeRecord = async () => {
 
 const resetScanner = () => {
   scannedMember.value = null
-  showDetails.value = false
   modal.value.step = ''
   startScanner()
 }

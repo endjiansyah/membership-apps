@@ -11,10 +11,22 @@ export default defineEventHandler(async (event) => {
     where: { id: Number(id) },
     include: {
       logs: {
-        orderBy: { scannedAt: 'desc' }
+        orderBy: { scannedAt: 'desc' },
+        // TAMBAHAN: Tarik nama petugas yang melakukan scan
+        include: {
+          scannedBy: {
+            select: { name: true }
+          }
+        }
       },
       auditLogs: {
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
+        // TAMBAHAN: Tarik nama petugas/admin yang melakukan aktivitas
+        include: {
+          user: {
+            select: { name: true }
+          }
+        }
       }
     }
   })
