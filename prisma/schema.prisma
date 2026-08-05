@@ -22,14 +22,15 @@ enum EntryMethod {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(PETUGAS)
+  id          Int              @id @default(autoincrement())
+  name        String
+  email       String           @unique
+  password    String
+  role        Role             @default(PETUGAS)
   
-  logs      AttendanceLog[] 
-  createdAt DateTime @default(now())
+  logs        AttendanceLog[] 
+  auditLogs   MemberAuditLog[] // Relasi balik dari MemberAuditLog
+  createdAt   DateTime         @default(now())
 }
 
 model DynamicField {
@@ -43,31 +44,46 @@ model DynamicField {
 }
 
 model Member {
-  id           Int      @id @default(autoincrement())
-  uuid         String   @unique @default(uuid()) 
+  id           Int              @id @default(autoincrement())
+  uuid         String           @unique @default(uuid()) 
   name         String
   email        String?
   phoneNumber  String?
   photoPath    String?
-  isActive     Boolean  @default(true)
+  isActive     Boolean          @default(true)
   
-  dynamicData  Json?    
+  dynamicData  Json?     
   
   logs         AttendanceLog[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  auditLogs    MemberAuditLog[] // Relasi balik dari MemberAuditLog
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 }
 
 model AttendanceLog {
-  id          Int      @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   memberId    Int
-  member      Member   @relation(fields: [memberId], references: [id])
+  member      Member      @relation(fields: [memberId], references: [id])
   scannedById Int
-  scannedBy   User     @relation(fields: [scannedById], references: [id])
-  scannedAt   DateTime @default(now())
+  scannedBy   User        @relation(fields: [scannedById], references: [id])
+  scannedAt   DateTime    @default(now())
   
   entryMethod EntryMethod @default(QR_SCAN)
   notes       String?     
   
   deletedAt   DateTime?   
+}
+
+// Tabel untuk mencatat segala aktivitas administratif pada data member
+model MemberAuditLog {
+  id          Int      @id @default(autoincrement())
+  memberId    Int
+  action      String   // Contoh: "AKTIVASI_STATUS", "NONAKTIF_STATUS", "UPDATE_PROFIL"
+  source      String   // Contoh: "SCANNER", "MANUAL_ADMIN"
+  performedBy Int      // ID Petugas (User)
+  details     String?  // Data JSON riwayat perubahan (opsional)
+  createdAt   DateTime @default(now())
+
+  member      Member   @relation(fields: [memberId], references: [id])
+  user        User     @relation(fields: [performedBy], references: [id])
 }
