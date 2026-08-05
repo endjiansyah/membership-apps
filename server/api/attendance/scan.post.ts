@@ -1,3 +1,4 @@
+// server/api/attendance/scan.post.ts
 import { prisma } from '../../utils/prisma'
 
 export default defineEventHandler(async (event) => {
@@ -8,7 +9,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'QR Code tidak terbaca dengan benar.' })
   }
 
-  // 1. Cek apakah UUID tersebut valid milik member kita
+  // 1. Cek validitas UUID
   const member = await prisma.member.findUnique({
     where: { uuid: uuid }
   })
@@ -17,10 +18,14 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'QR Code tidak terdaftar di sistem!' })
   }
 
-  // 2. Karena fitur Login belum ada, kita butuh 1 "User" (Petugas) dummy untuk mengisi kolom scannedById
+  // 2. CEK STATUS AKTIF (Baru ditambahkan sesuai request)
+  if (!member.isActive) {
+    throw createError({ statusCode: 403, statusMessage: 'Gagal! Member ini berstatus Non-Aktif.' })
+  }
+
+  // 3. User / Petugas dummy
   let petugas = await prisma.user.findFirst()
   if (!petugas) {
-    // Jika tabel User kosong, sistem akan otomatis membuat 1 petugas cadangan
     petugas = await prisma.user.create({
       data: {
         name: 'Petugas Pintu 1',
@@ -31,7 +36,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // 3. Masukkan data ke tabel log presensi
+  // 4. Masukkan data ke tabel log
   const log = await prisma.attendanceLog.create({
     data: {
       memberId: member.id,
@@ -40,7 +45,6 @@ export default defineEventHandler(async (event) => {
     }
   })
 
-  // 4. Kembalikan data sukses ke HP petugas
   return {
     success: true,
     member: {
