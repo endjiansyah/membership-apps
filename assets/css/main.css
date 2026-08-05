@@ -1,38 +1,55 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap');
 
-/* 1. Paksa Background Utama Jadi Deep Coffee */
+/* --- 1. OVERRIDE VARIABEL GLOBAL BOOTSTRAP --- */
+:root {
+  --bs-primary: #D97706;
+  --bs-primary-rgb: 217, 119, 6;
+  --bs-success: #10B981;
+  --bs-success-rgb: 16, 185, 129;
+  --bs-dark: #1C1512;
+  --bs-dark-rgb: 28, 21, 18;
+  --bs-body-bg: #120D0B;
+  --bs-body-color: #ffffff;
+  --bs-font-sans-serif: 'Inter', sans-serif;
+  --bs-border-color: #2D231E;
+
+  /* Menimpa langsung styling komponen Bootstrap secara massal */
+  --bs-btn-primary-bg: #D97706;
+  --bs-btn-primary-border-color: #D97706;
+  --bs-btn-primary-color: #120D0B;
+  --bs-btn-primary-hover-bg: #b36205;
+  --bs-btn-primary-hover-border-color: #b36205;
+  --bs-btn-primary-hover-color: #120D0B;
+}
+
+/* --- 2. BASE STYLING --- */
 body {
-  background-color: #120D0B !important;
-  color: #ffffff !important;
-  font-family: 'Inter', sans-serif !important;
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  font-family: var(--bs-font-sans-serif);
 }
 
-/* 2. Paksa bg-dark Jadi Mocha Layer */
-.bg-dark {
-  background-color: #1C1512 !important;
+.bg-dark, .card {
+  background-color: var(--bs-dark) !important;
+  color: var(--bs-body-color) !important;
 }
 
-/* 3. Paksa btn-primary Jadi Burned Amber */
-.btn-primary {
-  background-color: #D97706 !important;
-  border-color: #D97706 !important;
-  color: #000000 !important;
-}
-.btn-primary:hover {
-  background-color: #b36205 !important;
-  border-color: #b36205 !important;
-}
-
-/* 4. Paksa text-primary Jadi Burned Amber */
 .text-primary {
-  color: #D97706 !important;
+  color: var(--bs-primary) !important;
 }
 
-/* 5. Ganti Warna Border Bawaan Bootstrap */
-.border, .border-bottom {
-  border-color: #2D231E !important;
+.btn-primary {
+  background-color: var(--bs-primary) !important;
+  border-color: var(--bs-primary) !important;
+  color: #120D0B !important;
+  font-weight: 700;
 }
 
-/* 6. Utility Tambahan (Sesuai Desain Anda) */
-.tracking-tight { letter-spacing: -0.025em; }
-.tracking-widest { letter-spacing: 0.1em; }
+.btn-primary:hover {
+  background-color: var(--bs-btn-primary-hover-bg) !important;
+  border-color: var(--bs-btn-primary-hover-border-color) !important;
+}
+
+.border, .border-bottom, .border-top {
+  border-color: var(--bs-border-color) !important;
+}
