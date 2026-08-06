@@ -31,4 +31,5 @@ logs
 .agents/
 skills-lock.json
 
-/public/uploads/members/
+# Uploaded member images
+public/uploads/members/

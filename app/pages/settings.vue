@@ -1,10 +1,6 @@
 <template>
   <div class="container-fluid px-0 py-3 pb-5 mb-5" style="max-width: 600px;">
     
-    <!-- HEADER -->
-    <div class="d-flex align-items-center mb-4 px-3 sticky-top bg-black bg-opacity-75 py-2" style="z-index: 1020; backdrop-filter: blur(8px);">
-      <h6 class="mb-0 fw-bold text-secondary text-uppercase tracking-wider mx-auto" style="font-size: 0.75rem; letter-spacing: 1px;">Pengaturan Sistem</h6>
-    </div>
     
     <div class="px-3">
       <!-- TAB SELECTOR -->
@@ -155,7 +151,7 @@ const activeTab = ref('form')
 
 // 1. CEK OTORISASI USER SAAT INI
 const { data: authUser } = await useFetch('/api/auth/me', { server: false })
-const isSuperAdmin = computed(() => authUser.value?.role === 'SUPER_ADMIN')
+const isSuperAdmin = computed(() => authUser.value?.user?.role === 'SUPER_ADMIN')
 
 // 2. LOGIKA PENGATURAN FORM DINAMIS (Tidak diubah, hanya styling yang diganti)
 const { data: fields, refresh: refreshFields } = await useFetch('/api/fields', { server: false })
