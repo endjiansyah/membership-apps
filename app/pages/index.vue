@@ -74,7 +74,7 @@ function formatTime(dateString) {
     <!-- AKSI CEPAT SCANNER -->
     <div class="px-2 mb-4">
       <NuxtLink to="/scanner" class="btn btn-primary w-100 fw-bold py-3 rounded-4 text-dark shadow-sm d-flex align-items-center justify-content-center gap-2">
-        <i class="bi bi-camera-fill fs-5"></i> Buka Scanner Presensi
+        <i class="bi bi-camera-fill fs-5"></i> Buka Scanner
       </NuxtLink>
     </div>
 

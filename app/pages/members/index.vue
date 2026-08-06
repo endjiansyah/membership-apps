@@ -92,7 +92,7 @@
           
           <!-- Tombol Aksi Bawah Kartu -->
           <div class="d-flex gap-2">
-            <button @click.prevent="showQR(member)" class="btn btn-outline-primary btn-sm rounded-pill fw-bold px-3 py-2 w-100">
+            <button @click.prevent="showQR(member)" class="btn btn-primary btn-sm rounded-pill fw-bold px-3 py-2 w-100">
               Download QR
             </button>
             <NuxtLink :to="`/members/${member.id}`" class="btn btn-outline-secondary btn-sm rounded-pill fw-bold px-3 py-2 w-100 text-white">
@@ -109,8 +109,7 @@
     <div v-if="selectedMember" class="position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-75 d-flex justify-content-center align-items-center px-3" style="z-index: 1060;" @click.self="selectedMember = null">
       <div class="card bg-dark border border-secondary border-opacity-50 rounded-4 p-4 text-center shadow-lg w-100" style="max-width: 350px;">
         
-        <h4 class="fw-bold mb-1 text-white">{{ selectedMember.name }}</h4>
-        <p class="small mb-4 text-secondary">Gunakan QR ini saat melakukan Presensi</p>
+        <h4 class="fw-bold mb-1 text-white mb-4">{{ selectedMember.name }}</h4>
         
         <div class="bg-white p-2 rounded-4 mb-4 d-inline-block mx-auto shadow-sm">
           <img v-if="qrImageUrl" :src="qrImageUrl" alt="QR Code Member" class="rounded-3" style="width: 220px; height: 220px; display: block;" />
@@ -201,7 +200,7 @@ const downloadCard = async () => {
     ctx.fillText(selectedMember.value.name, canvas.width / 2, 120)
     ctx.fillStyle = '#64748b'
     ctx.font = '26px sans-serif'
-    ctx.fillText('Tunjukkan QR Code ini saat Presensi', canvas.width / 2, 180)
+    ctx.fillText('Tunjukkan QR Code ini untuk scan Membership', canvas.width / 2, 180)
 
     await new Promise((resolve, reject) => {
       const qrImage = new Image()
