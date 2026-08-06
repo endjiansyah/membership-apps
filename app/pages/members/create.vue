@@ -1,20 +1,10 @@
 <template>
   <div class="container-fluid px-0 py-3 pb-5 mb-5" style="max-width: 600px;">
-    
-    <!-- HEADER -->
-    <div class="d-flex align-items-center mb-4 px-3 sticky-top bg-black bg-opacity-75 py-2" style="z-index: 1020; backdrop-filter: blur(8px);">
-      <NuxtLink to="/members" class="text-decoration-none text-secondary me-3" aria-label="Kembali">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-          <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
-        </svg>
-      </NuxtLink>
-      <h6 class="mb-0 fw-bold text-secondary text-uppercase tracking-wider mx-auto" style="font-size: 0.75rem; letter-spacing: 1px;">Tambah Member</h6>
-      <div style="width: 24px;"></div>
-    </div>
+
 
     <form @submit.prevent="saveMember" class="px-3 pb-5 mb-5">
       
-      <!-- AREA UPLOAD FOTO -->
+      <!-- AREA UPLOAD FOTO (Mempertahankan UI Lama Anda) -->
       <div class="d-flex flex-column align-items-center mb-4">
         <div 
           class="position-relative d-inline-flex justify-content-center align-items-center bg-dark border border-secondary border-opacity-50 text-secondary shadow-sm" 
@@ -101,8 +91,8 @@
 
       <!-- TOMBOL SIMPAN -->
       <div>
-        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-pill shadow-sm text-dark" :disabled="isLoading">
-          {{ isLoading ? 'Menyimpan Data...' : 'Simpan & Buat Profil' }}
+        <button type="submit" class="btn btn-primary w-100 fw-bold py-3 rounded-pill shadow-sm text-dark" :disabled="isLoading">
+          {{ isLoading ? 'Menyimpan & Mengompresi Foto...' : 'Simpan & Buat Profil' }}
         </button>
       </div>
 
@@ -112,61 +102,41 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 
-const router = useRouter()
 const { data: fields } = await useFetch('/api/fields', { server: false })
 
 const isLoading = ref(false)
 const photoPreview = ref(null)
 const fileInput = ref(null)
 
+// KUNCI: Kita siapkan state khusus untuk menampung FILE ASLI (Binary)
+const selectedFile = ref(null) 
+
 const form = ref({
   name: '',
   phoneNumber: '',
   email: '',
-  photoPath: '', 
   dynamicData: {} 
 })
 
+// Fungsi klik buatan untuk memicu input file yang tersembunyi
 const triggerFileInput = () => {
   if (fileInput.value) {
     fileInput.value.click()
   }
 }
 
+// Fungsi ini MURNI HANYA UNTUK MEMBUAT PREVIEW GAMBAR
+// (Kompresinya biarkan Backend/Sharp yang mengurus agar hasilnya lebih optimal)
 const handlePhotoUpload = (event) => {
   const file = event.target.files[0]
   if (file) {
+    selectedFile.value = file // SIMPAN FILE ASLI KE VARIABEL INI
+
+    // Buat URL sementara HANYA UNTUK PREVIEW di browser
     const reader = new FileReader()
     reader.onload = (e) => {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        let width = img.width
-        let height = img.height
-
-        // Tentukan batas maksimal lebar gambar (misal: 800px)
-        const MAX_WIDTH = 800
-        if (width > MAX_WIDTH) {
-          height = Math.round((height * MAX_WIDTH) / width)
-          width = MAX_WIDTH
-        }
-
-        canvas.width = width
-        canvas.height = height
-
-        const ctx = canvas.getContext('2d')
-        ctx.drawImage(img, 0, 0, width, height)
-
-        // Kompres otomatis ke format JPEG dengan kualitas 0.7 (70%)
-        // Ini akan memangkas ukuran size secara drastis tanpa merusak visual wajah
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7)
-
-        photoPreview.value = compressedDataUrl 
-        form.value.photoPath = compressedDataUrl 
-      }
-      img.src = e.target.result
+      photoPreview.value = e.target.result 
     }
     reader.readAsDataURL(file)
   }
@@ -174,16 +144,31 @@ const handlePhotoUpload = (event) => {
 
 const saveMember = async () => {
   isLoading.value = true
+  
   try {
+    const formData = new FormData()
+    
+    // Masukkan data teks
+    formData.append('name', form.value.name)
+    formData.append('phoneNumber', form.value.phoneNumber)
+    formData.append('email', form.value.email)
+    formData.append('dynamicData', JSON.stringify(form.value.dynamicData))
+    
+    // Masukkan FILE FISIK, bukan base64 preview-nya
+    if (selectedFile.value) {
+      formData.append('photo', selectedFile.value)
+    }
+
     await $fetch('/api/members', {
       method: 'POST',
-      body: form.value
+      body: formData
     })
     
-    alert('Member berhasil ditambahkan!')
-    router.push('/members')
+    alert('Member berhasil dibuat!')
+    navigateTo('/members')
   } catch (error) {
-    alert(error.data?.statusMessage || 'Gagal menyimpan data member.')
+    console.error(error)
+    alert('Gagal membuat member. Pastikan semua kolom wajib diisi.')
   } finally {
     isLoading.value = false
   }
