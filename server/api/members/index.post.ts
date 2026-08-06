@@ -9,6 +9,7 @@ export default defineEventHandler(async (event) => {
         name: body.name,
         email: body.email || null,
         phoneNumber: body.phoneNumber || null,
+        photoPath: body.photoPath || null,
         // Menyimpan jawaban form dinamis langsung sebagai objek JSON
         dynamicData: body.dynamicData || {}
       }

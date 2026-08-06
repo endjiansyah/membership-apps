@@ -80,10 +80,10 @@ model MemberAuditLog {
   memberId    Int
   action      String   // Contoh: "AKTIVASI_STATUS", "NONAKTIF_STATUS", "UPDATE_PROFIL"
   source      String   // Contoh: "SCANNER", "MANUAL_ADMIN"
-  performedBy Int      // ID Petugas (User)
+  performedBy Int?      // ID Petugas (User)
   details     String?  // Data JSON riwayat perubahan (opsional)
   createdAt   DateTime @default(now())
 
   member      Member   @relation(fields: [memberId], references: [id])
-  user        User     @relation(fields: [performedBy], references: [id])
+  user        User?     @relation(fields: [performedBy], references: [id])
 }

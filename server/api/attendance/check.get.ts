@@ -12,7 +12,13 @@ export default defineEventHandler(async (event) => {
     where: { uuid: uuid },
     include: {
       logs: {
-        orderBy: { scannedAt: 'desc' }
+        orderBy: { scannedAt: 'desc' },
+        // Menjaga konsistensi relasi (opsional namun best-practice)
+        include: {
+          scannedBy: {
+            select: { name: true }
+          }
+        }
       }
     }
   })
@@ -53,11 +59,12 @@ export default defineEventHandler(async (event) => {
     isActive: member.isActive,
     email: member.email,
     phoneNumber: member.phoneNumber,
+    photoPath: member.photoPath, // <-- TAMBAHAN AGAR FOTO MUNCUL DI SCANNER
     dynamicData: member.dynamicData,
     totalVisits,
     visitsThisMonth,
     visitsThisYear,
     lastVisit,
-    visitedToday // <-- Kirim status ini ke frontend
+    visitedToday 
   }
 })

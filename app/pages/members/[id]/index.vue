@@ -97,10 +97,10 @@
             <small class="text-secondary d-block mb-1" style="font-size: 0.75rem;">Phone Number</small>
             <span class="fw-bold text-white">{{ member.phoneNumber || '-' }}</span>
           </div>
-          <!-- Rendering Dynamic Data Seamlessly -->
+          <!-- Rendering Dynamic Data dengan Label Asli (Bukan Slug) -->
           <template v-if="member.dynamicData">
             <div v-for="(value, key, index) in parseDynamicData(member.dynamicData)" :key="key" class="p-3" :class="{ 'border-bottom border-secondary border-opacity-25': index !== Object.keys(parseDynamicData(member.dynamicData)).length - 1 }">
-              <small class="text-secondary d-block mb-1" style="font-size: 0.75rem;">{{ key }}</small>
+              <small class="text-secondary d-block mb-1" style="font-size: 0.75rem;">{{ getFieldLabel(key) }}</small>
               <span class="fw-bold text-white">{{ value || '-' }}</span>
             </div>
           </template>
@@ -218,6 +218,15 @@ const filterOptions = [
 
 const { data: member, pending, refresh } = await useFetch(`/api/members/${memberId}`, { server: false })
 
+// Tarik master fields untuk memetakan fieldKey (slug) menjadi label natural (misal: 'asal_kota' -> 'Asal Kota')
+const { data: fields } = await useFetch('/api/fields', { server: false })
+
+const getFieldLabel = (key) => {
+  if (!fields.value) return key
+  const found = fields.value.find(f => f.fieldKey === key)
+  return found ? found.label : key
+}
+
 const getInitials = (name) => {
   if (!name) return '?'
   const words = name.trim().split(' ')
@@ -287,7 +296,6 @@ const stats = computed(() => {
     return d.getFullYear() === now.getFullYear()
   }).length
 
-  // Asumsi logs sudah diurutkan dari backend, ambil index 0. Jika tidak, cari yang terbaru.
   const latestLog = logs.reduce((latest, current) => {
     return new Date(latest.scannedAt) > new Date(current.scannedAt) ? latest : current
   }, logs[0] || null)
@@ -340,7 +348,6 @@ const toggleStatus = async () => {
 </script>
 
 <style scoped>
-/* Color override khusus untuk input date agar ikon kalendernya tidak gelap total (opsional tergantung browser) */
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
 }
