@@ -1,3 +1,21 @@
+<script setup>
+const route = useRoute()
+
+// Fungsi untuk mengecek apakah rute saat ini bagian dari members
+function isMemberActive() {
+  return route.path.startsWith('/members')
+}
+
+async function handleLogout() {
+  try {
+    await $fetch('/api/auth/logout', { method: 'POST' })
+    window.location.href = '/login'
+  } catch (error) {
+    console.error('Gagal logout', error)
+  }
+}
+</script>
+
 <template>
   <div class="d-flex min-vh-100 flex-column flex-md-row bg-body text-white">
     
@@ -6,25 +24,35 @@
       <div class="p-4 border-bottom text-center">
         <h5 class="fw-bold mb-0 text-white">MemberTrack</h5>
       </div>
-      <nav class="nav flex-column p-3 gap-2">
-        <NuxtLink to="/" class="d-flex align-items-center px-3 py-2 text-secondary text-decoration-none rounded-3 fw-medium" active-class="bg-primary bg-opacity-10 text-primary fw-bold">
+      <nav class="nav flex-column p-3 gap-2 flex-grow-1">
+        <NuxtLink to="/" class="d-flex align-items-center px-3 py-2 text-secondary text-decoration-none rounded-3 fw-medium" active-class="bg-primary bg-opacity-10 text-primary fw-bold" exact>
           <span class="fs-5 me-3">📊</span> Dashboard
         </NuxtLink>
-        <NuxtLink to="/members" class="d-flex align-items-center px-3 py-2 text-secondary text-decoration-none rounded-3 fw-medium" active-class="bg-primary bg-opacity-10 text-primary fw-bold">
+        <NuxtLink to="/members" class="d-flex align-items-center px-3 py-2 text-secondary text-decoration-none rounded-3 fw-medium" :class="{ 'bg-primary bg-opacity-10 text-primary fw-bold': isMemberActive() }">
           <span class="fs-5 me-3">👥</span> Members
         </NuxtLink>
         <NuxtLink to="/scanner" class="d-flex align-items-center px-3 py-2 text-secondary text-decoration-none rounded-3 fw-medium" active-class="bg-primary bg-opacity-10 text-primary fw-bold">
-          <span class="fs-5 me-3">📷</span> Scan
+          <span class="fs-5 me-3">📷</span> Scanner
         </NuxtLink>
         <NuxtLink to="/settings" class="d-flex align-items-center px-3 py-2 text-secondary text-decoration-none rounded-3 fw-medium" active-class="bg-primary bg-opacity-10 text-primary fw-bold">
           <span class="fs-5 me-3">⚙️</span> Settings
         </NuxtLink>
       </nav>
+
+      <!-- Tombol Logout Desktop -->
+      <div class="p-3 border-top border-secondary">
+        <button @click="handleLogout" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 py-2 fw-bold">
+          <i class="bi bi-box-arrow-right"></i> Keluar
+        </button>
+      </div>
     </aside>
 
     <!-- MOBILE TOP HEADER -->
-    <header class="d-md-none bg-dark sticky-top shadow-sm border-bottom text-center py-3" style="z-index: 1020;">
+    <header class="d-md-none bg-dark sticky-top shadow-sm border-bottom d-flex justify-content-between align-items-center px-3 py-3" style="z-index: 1020;">
       <h5 class="mb-0 fw-bold text-white">MemberTrack</h5>
+      <button @click="handleLogout" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1">
+        <i class="bi bi-box-arrow-right"></i> Keluar
+      </button>
     </header>
 
     <!-- AREA KONTEN UTAMA -->
@@ -34,15 +62,15 @@
       </div>
     </main>
 
-    <!-- MOBILE BOTTOM NAV (Persis seperti skema desain mobile Anda) -->
+    <!-- MOBILE BOTTOM NAV -->
     <nav class="d-md-none fixed-bottom bg-dark border-top shadow-lg" style="z-index: 1030; padding-bottom: env(safe-area-inset-bottom);">
       <div class="d-flex justify-content-around px-2 py-2">
-        <NuxtLink to="/" class="d-flex flex-column align-items-center justify-content-center p-2 text-secondary text-decoration-none rounded-3" active-class="text-primary fw-bold">
+        <NuxtLink to="/" class="d-flex flex-column align-items-center justify-content-center p-2 text-secondary text-decoration-none rounded-3" active-class="text-primary fw-bold" exact>
           <span class="fs-4 mb-1">📊</span>
-          <span style="font-size: 0.7rem;">Scan</span>
+          <span style="font-size: 0.7rem;">Dashboard</span>
         </NuxtLink>
         
-        <NuxtLink to="/members" class="d-flex flex-column align-items-center justify-content-center p-2 text-secondary text-decoration-none rounded-3" active-class="text-primary fw-bold">
+        <NuxtLink to="/members" class="d-flex flex-column align-items-center justify-content-center p-2 text-secondary text-decoration-none rounded-3" :class="{ 'text-primary fw-bold': isMemberActive() }">
           <span class="fs-4 mb-1">👥</span>
           <span style="font-size: 0.7rem;">Members</span>
         </NuxtLink>
