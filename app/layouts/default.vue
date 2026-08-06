@@ -37,12 +37,15 @@ async function handleLogout() {
         <NuxtLink to="/settings" class="d-flex align-items-center px-3 py-2 text-secondary text-decoration-none rounded-3 fw-medium" active-class="bg-primary bg-opacity-10 text-primary fw-bold">
           <span class="fs-5 me-3">⚙️</span> Settings
         </NuxtLink>
+        <NuxtLink to="/profile" class="d-flex align-items-center px-3 py-2 text-secondary text-decoration-none rounded-3 fw-medium" active-class="bg-primary bg-opacity-10 text-primary fw-bold">
+          <span class="fs-5 me-3">👤</span> Profile
+        </NuxtLink>
       </nav>
 
       <!-- Tombol Logout Desktop -->
       <div class="p-3 border-top border-secondary">
         <button @click="handleLogout" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 py-2 fw-bold">
-          <i class="bi bi-box-arrow-right"></i> Keluar
+          <i class="bi bi-box-arrow-right"></i> Logout
         </button>
       </div>
     </aside>
@@ -51,7 +54,7 @@ async function handleLogout() {
     <header class="d-md-none bg-dark sticky-top shadow-sm border-bottom d-flex justify-content-between align-items-center px-3 py-3" style="z-index: 1020;">
       <h5 class="mb-0 fw-bold text-white">MemberTrack</h5>
       <button @click="handleLogout" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1">
-        <i class="bi bi-box-arrow-right"></i> Keluar
+        <i class="bi bi-box-arrow-right"></i> Logout
       </button>
     </header>
 
@@ -83,6 +86,10 @@ async function handleLogout() {
         <NuxtLink to="/settings" class="d-flex flex-column align-items-center justify-content-center p-2 text-secondary text-decoration-none rounded-3" active-class="text-primary fw-bold">
           <span class="fs-4 mb-1">⚙️</span>
           <span style="font-size: 0.7rem;">Settings</span>
+        </NuxtLink>
+
+        <NuxtLink to="/profile"  class="d-flex flex-column align-items-center justify-content-center p-2 text-secondary text-decoration-none rounded-3" active-class="text-primary fw-bold">
+          <span class="fs-4 mb-1">👤</span> <span style="font-size: 0.7rem;">Profile</span>
         </NuxtLink>
       </div>
     </nav>
