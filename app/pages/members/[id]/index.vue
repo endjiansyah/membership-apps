@@ -52,7 +52,7 @@
         </button>
       </div>
 
-      <!-- STATISTIK KEHADIRAN (Real-time computed) -->
+      <!-- STATISTIK KEHADIRAN -->
       <div class="mb-4">
         <small class="text-secondary fw-bold mb-2 d-block text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">Statistik Kehadiran</small>
         <div class="row g-2">
@@ -85,7 +85,7 @@
         </div>
       </div>
 
-      <!-- MEMBER INFORMATION (Unified Basic & Dynamic Data) -->
+      <!-- MEMBER INFORMATION -->
       <div class="mb-4">
         <small class="text-secondary fw-bold mb-2 d-block text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">Member Information</small>
         <div class="card bg-dark border border-secondary border-opacity-25 rounded-4 overflow-hidden shadow-sm">
@@ -97,7 +97,7 @@
             <small class="text-secondary d-block mb-1" style="font-size: 0.75rem;">Phone Number</small>
             <span class="fw-bold text-white">{{ member.phoneNumber || '-' }}</span>
           </div>
-          <!-- Rendering Dynamic Data dengan Label Asli (Bukan Slug) -->
+          <!-- Rendering Dynamic Data -->
           <template v-if="member.dynamicData">
             <div v-for="(value, key, index) in parseDynamicData(member.dynamicData)" :key="key" class="p-3" :class="{ 'border-bottom border-secondary border-opacity-25': index !== Object.keys(parseDynamicData(member.dynamicData)).length - 1 }">
               <small class="text-secondary d-block mb-1" style="font-size: 0.75rem;">{{ getFieldLabel(key) }}</small>
@@ -107,7 +107,7 @@
         </div>
       </div>
 
-      <!-- RIWAYAT & LOGS (Dengan Filter) -->
+      <!-- RIWAYAT & LOGS -->
       <div class="mb-4">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <small class="text-secondary fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">Riwayat & Aktivitas</small>
@@ -123,7 +123,7 @@
           </button>
         </div>
 
-        <!-- Filter Waktu (Banking App Style) -->
+        <!-- Filter Waktu -->
         <div class="mb-3">
           <div class="d-flex gap-2 overflow-auto pb-1" style="scrollbar-width: none;">
             <button v-for="ft in filterOptions" :key="ft.value" @click="timeFilter = ft.value" class="btn btn-sm rounded-pill fw-bold px-3 border border-secondary border-opacity-25" style="font-size: 0.7rem;" :class="timeFilter === ft.value ? 'bg-secondary text-white' : 'bg-dark text-secondary'">
@@ -184,6 +184,26 @@
               <p class="mb-0 text-secondary" style="font-size: 0.75rem;">
                 Dieksekusi oleh: <span class="text-white fw-bold">{{ audit.user?.name || `Petugas #${audit.performedBy}` }}</span>
               </p>
+
+              <!-- TOMBOL & DETAIL PERUBAHAN -->
+              <div v-if="isJson(audit.details)" class="mt-2">
+                <button @click="toggleAudit(audit.id)" class="btn btn-sm btn-dark border border-secondary border-opacity-25 rounded text-secondary" style="font-size: 0.7rem; padding: 2px 8px;">
+                  {{ expandedAuditId === audit.id ? 'Sembunyikan Detail' : 'Lihat Detail Perubahan' }}
+                </button>
+                
+                <!-- Box Rincian Perubahan -->
+                <div v-if="expandedAuditId === audit.id" class="mt-2 bg-black bg-opacity-50 p-2 rounded-3 border border-secondary border-opacity-25">
+                  <div v-for="(change, idx) in parseDetails(audit.details)" :key="idx" class="mb-1">
+                    <span class="text-secondary d-block fw-bold" style="font-size: 0.65rem;">{{ change.field }}</span>
+                    <div class="d-flex align-items-center gap-2" style="font-size: 0.75rem;">
+                      <span class="text-danger text-decoration-line-through text-truncate" style="max-width: 40%;">{{ change.old }}</span>
+                      <span class="text-secondary">→</span>
+                      <span class="text-success text-truncate" style="max-width: 40%;">{{ change.new }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -203,6 +223,7 @@ const memberId = route.params.id
 
 const activeTab = ref('kehadiran')
 const isProcessing = ref(false)
+const expandedAuditId = ref(null)
 
 // State Filter Waktu
 const timeFilter = ref('all')
@@ -218,7 +239,6 @@ const filterOptions = [
 
 const { data: member, pending, refresh } = await useFetch(`/api/members/${memberId}`, { server: false })
 
-// Tarik master fields untuk memetakan fieldKey (slug) menjadi label natural (misal: 'asal_kota' -> 'Asal Kota')
 const { data: fields } = await useFetch('/api/fields', { server: false })
 
 const getFieldLabel = (key) => {
@@ -240,17 +260,32 @@ const parseDynamicData = (data) => {
   catch (e) { return {} }
 }
 
+const toggleAudit = (id) => {
+  expandedAuditId.value = expandedAuditId.value === id ? null : id
+}
+
+const isJson = (str) => {
+  if (!str) return false
+  try { 
+    const parsed = JSON.parse(str)
+    return Array.isArray(parsed)
+  } catch(e) { return false }
+}
+
+const parseDetails = (str) => {
+  try { return JSON.parse(str) } catch(e) { return [] }
+}
+
 const formatAuditAction = (action) => {
   const actions = {
     'AKTIVASI_STATUS': 'Aktivasi Membership',
     'NONAKTIF_STATUS': 'Penonaktifan Membership',
-    'UPDATE_PROFIL': 'Pembaruan Data Profil',
+    'UPDATE_PROFIL': 'Pembaruan Data Member',
     'CREATE_MEMBER': 'Pendaftaran Member Baru'
   }
   return actions[action] || action
 }
 
-// Logic Filter Waktu Global
 const isWithinDateRange = (dateString) => {
   if (!dateString) return false
   const targetDate = new Date(dateString)
@@ -267,10 +302,9 @@ const isWithinDateRange = (dateString) => {
     return targetDate >= start && targetDate <= end
   }
   
-  return true // 'all'
+  return true
 }
 
-// Computed Properties untuk List yang Terfilter
 const filteredAttendance = computed(() => {
   if (!member.value?.logs) return []
   return member.value.logs.filter(log => isWithinDateRange(log.scannedAt)).sort((a, b) => new Date(b.scannedAt) - new Date(a.scannedAt))
@@ -281,7 +315,6 @@ const filteredAudit = computed(() => {
   return member.value.auditLogs.filter(audit => isWithinDateRange(audit.createdAt)).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 })
 
-// Computed Properties untuk Statistik Kehadiran (Dihitung dari relasi logs)
 const stats = computed(() => {
   const logs = member.value?.logs || []
   const now = new Date()

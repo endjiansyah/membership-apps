@@ -63,7 +63,8 @@ model Member {
 model AttendanceLog {
   id          Int         @id @default(autoincrement())
   memberId    Int
-  member      Member      @relation(fields: [memberId], references: [id])
+  // Tambahkan onDelete: Cascade di sini
+  member      Member      @relation(fields: [memberId], references: [id], onDelete: Cascade) 
   scannedById Int
   scannedBy   User        @relation(fields: [scannedById], references: [id])
   scannedAt   DateTime    @default(now())
@@ -74,16 +75,16 @@ model AttendanceLog {
   deletedAt   DateTime?   
 }
 
-// Tabel untuk mencatat segala aktivitas administratif pada data member
 model MemberAuditLog {
   id          Int      @id @default(autoincrement())
   memberId    Int
-  action      String   // Contoh: "AKTIVASI_STATUS", "NONAKTIF_STATUS", "UPDATE_PROFIL"
-  source      String   // Contoh: "SCANNER", "MANUAL_ADMIN"
-  performedBy Int?      // ID Petugas (User)
-  details     String?  // Data JSON riwayat perubahan (opsional)
+  action      String   
+  source      String   
+  performedBy Int?     
+  details     String?  
   createdAt   DateTime @default(now())
 
-  member      Member   @relation(fields: [memberId], references: [id])
-  user        User?     @relation(fields: [performedBy], references: [id])
+  // Tambahkan onDelete: Cascade di sini
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [performedBy], references: [id])
 }

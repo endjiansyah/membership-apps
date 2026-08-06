@@ -47,24 +47,24 @@
       <div class="card bg-dark border border-secondary border-opacity-25 rounded-4 shadow-sm mb-4 overflow-hidden">
         <div class="card-body p-4">
           
-          <div class="mb-4">
+          <div class="mb-3">
             <label class="form-label text-secondary small fw-bold">Nama Lengkap <span class="text-danger">*</span></label>
-            <input type="text" v-model="form.name" class="form-control form-control-lg bg-black border-secondary border-opacity-25 text-white shadow-none" required placeholder="Cth: Budi Santoso">
+            <input type="text" v-model="form.name" class="form-control bg-dark border-secondary border-opacity-25 text-white py-2 shadow-none" required placeholder="Cth: Budi Santoso">
           </div>
           
-          <div class="mb-4">
+          <div class="mb-3">
             <label class="form-label text-secondary small fw-bold">No. WhatsApp</label>
-            <input type="tel" v-model="form.phoneNumber" class="form-control form-control-lg bg-black border-secondary border-opacity-25 text-white shadow-none" placeholder="Cth: 08123456789">
+            <input type="tel" v-model="form.phoneNumber" class="form-control bg-dark border-secondary border-opacity-25 text-white py-2 shadow-none" placeholder="Cth: 08123456789">
           </div>
           
-          <div class="mb-4">
+          <div class="mb-3">
             <label class="form-label text-secondary small fw-bold">Alamat Email</label>
-            <input type="email" v-model="form.email" class="form-control form-control-lg bg-black border-secondary border-opacity-25 text-white shadow-none" placeholder="Cth: budi@email.com">
+            <input type="email" v-model="form.email" class="form-control bg-dark border-secondary border-opacity-25 text-white py-2 shadow-none" placeholder="Cth: budi@email.com">
           </div>
 
           <!-- Input Dinamis -->
           <template v-if="fields && fields.length > 0">
-            <div v-for="field in fields" :key="field.id" class="mb-4">
+            <div v-for="field in fields" :key="field.id" class="mb-3">
               <label class="form-label text-secondary small fw-bold">
                 {{ field.label }} 
                 <span v-if="field.isRequired" class="text-danger">*</span>
@@ -74,7 +74,7 @@
                 v-if="field.type === 'text'" 
                 type="text" 
                 v-model="form.dynamicData[field.fieldKey]" 
-                class="form-control form-control-lg bg-black border-secondary border-opacity-25 text-white shadow-none" 
+                class="form-control bg-dark border-secondary border-opacity-25 text-white py-2 shadow-none" 
                 :required="field.isRequired"
                 :placeholder="'Masukkan ' + field.label"
               >
@@ -82,7 +82,7 @@
                 v-else-if="field.type === 'number'" 
                 type="number" 
                 v-model="form.dynamicData[field.fieldKey]" 
-                class="form-control form-control-lg bg-black border-secondary border-opacity-25 text-white shadow-none" 
+                class="form-control bg-dark border-secondary border-opacity-25 text-white py-2 shadow-none" 
                 :required="field.isRequired"
                 placeholder="0"
               >
@@ -90,7 +90,7 @@
                 v-else-if="field.type === 'date'" 
                 type="date" 
                 v-model="form.dynamicData[field.fieldKey]" 
-                class="form-control form-control-lg bg-black border-secondary border-opacity-25 text-white shadow-none" 
+                class="form-control bg-dark border-secondary border-opacity-25 text-white py-2 shadow-none" 
                 :required="field.isRequired"
               >
             </div>
@@ -99,9 +99,9 @@
         </div>
       </div>
 
-      <!-- TOMBOL SIMPAN NORMAL DI BAWAH FORM (TIDAK STICKY/FIXED) -->
+      <!-- TOMBOL SIMPAN -->
       <div>
-        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold py-3 shadow text-dark rounded-pill" :disabled="isLoading">
+        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-pill shadow-sm text-dark" :disabled="isLoading">
           {{ isLoading ? 'Menyimpan Data...' : 'Simpan & Buat Profil' }}
         </button>
       </div>
@@ -138,16 +138,35 @@ const triggerFileInput = () => {
 const handlePhotoUpload = (event) => {
   const file = event.target.files[0]
   if (file) {
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Ukuran foto maksimal 2MB.")
-      event.target.value = '' 
-      return
-    }
-
     const reader = new FileReader()
     reader.onload = (e) => {
-      photoPreview.value = e.target.result 
-      form.value.photoPath = e.target.result 
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
+
+        // Tentukan batas maksimal lebar gambar (misal: 800px)
+        const MAX_WIDTH = 800
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width)
+          width = MAX_WIDTH
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+
+        // Kompres otomatis ke format JPEG dengan kualitas 0.7 (70%)
+        // Ini akan memangkas ukuran size secara drastis tanpa merusak visual wajah
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7)
+
+        photoPreview.value = compressedDataUrl 
+        form.value.photoPath = compressedDataUrl 
+      }
+      img.src = e.target.result
     }
     reader.readAsDataURL(file)
   }

@@ -1,4 +1,4 @@
-import { prisma } from '../../utils/prisma'
+import { prisma } from '~~/server/utils/prisma' // Diseragamkan menggunakan absolute path
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -10,21 +10,21 @@ export default defineEventHandler(async (event) => {
   const member = await prisma.member.findUnique({
     where: { id: Number(id) },
     include: {
+      // 1. Tarik riwayat kehadiran
       logs: {
         orderBy: { scannedAt: 'desc' },
-        // TAMBAHAN: Tarik nama petugas yang melakukan scan
         include: {
           scannedBy: {
             select: { name: true }
           }
         }
       },
+      // 2. TAMBAHAN: Tarik riwayat audit log aktivitas
       auditLogs: {
         orderBy: { createdAt: 'desc' },
-        // TAMBAHAN: Tarik nama petugas/admin yang melakukan aktivitas
         include: {
           user: {
-            select: { name: true }
+            select: { name: true } // Ambil nama petugas yang mengeksekusi
           }
         }
       }

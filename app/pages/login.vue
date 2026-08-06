@@ -27,7 +27,7 @@ async function handleLogin() {
 
     if (res.success) {
       // Gunakan window.location agar browser memuat ulang cookie dan state secara penuh
-      window.location.href = '/scanner'
+      window.location.href = '/'
     }
   } catch (error) {
     errorMessage.value = error.data?.message || 'Terjadi kesalahan pada server.'

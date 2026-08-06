@@ -1,13 +1,13 @@
-export default defineNuxtRouteMiddleware(async (to) => {
-  // Biarkan halaman login bebas diakses tanpa redirect berulang
-  if (to.path === '/login') {
-    return
+export default defineNuxtRouteMiddleware((to) => {
+  const sessionCookie = useCookie('user_session')
+
+  // 1. Jika TIDAK ADA cookie dan mencoba akses halaman selain login -> tendang ke login
+  if (!sessionCookie.value && to.path !== '/login') {
+    return navigateTo('/login')
   }
 
-  // Cek keberadaan cookie sesi di sisi klien/server
-  const sessionCookie = useCookie('user_session')
-  
-  if (!sessionCookie.value) {
-    return navigateTo('/login')
+  // 2. Jika SUDAH ADA cookie tapi malah mencoba buka halaman login -> arahkan ke dasbor
+  if (sessionCookie.value && to.path === '/login') {
+    return navigateTo('/') // Sesuaikan dengan route dasbor Anda (misal: '/members' atau '/')
   }
 })

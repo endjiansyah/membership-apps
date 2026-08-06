@@ -26,7 +26,8 @@
           style="width: 100px; height: 100px; border-radius: 28px; overflow: hidden; cursor: pointer;"
           @click="triggerFileInput"
         >
-          <img v-if="form.photoPath" :src="form.photoPath" alt="Preview" class="w-100 h-100 object-fit-cover" />
+          <!-- Menggunakan photoPreview agar langsung berganti secara reaktif -->
+          <img v-if="photoPreview" :src="photoPreview" alt="Preview" class="w-100 h-100 object-fit-cover" />
           
           <svg v-else xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
             <path d="M15 12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1.172a3 3 0 0 0 2.12-.879l.83-.828A1 1 0 0 1 6.827 3h2.344a1 1 0 0 1 .707.293l.828.828A3 3 0 0 0 12.828 5H14a1 1 0 0 1 1 1zM2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4z"/>
@@ -52,24 +53,24 @@
       <div class="card bg-dark border border-secondary border-opacity-25 rounded-4 shadow-sm mb-4 overflow-hidden">
         <div class="card-body p-4">
           
-          <div class="mb-4">
+          <div class="mb-3">
             <label class="form-label text-secondary small fw-bold">Nama Lengkap <span class="text-danger">*</span></label>
-            <input type="text" v-model="form.name" class="form-control form-control-lg bg-black border-secondary border-opacity-25 text-white shadow-none" required placeholder="Cth: Budi Santoso">
+            <input type="text" v-model="form.name" class="form-control bg-dark border-secondary border-opacity-25 text-white py-2 shadow-none" required placeholder="Cth: Budi Santoso">
           </div>
           
-          <div class="mb-4">
+          <div class="mb-3">
             <label class="form-label text-secondary small fw-bold">No. WhatsApp</label>
-            <input type="tel" v-model="form.phoneNumber" class="form-control form-control-lg bg-black border-secondary border-opacity-25 text-white shadow-none" placeholder="Cth: 08123456789">
+            <input type="tel" v-model="form.phoneNumber" class="form-control bg-dark border-secondary border-opacity-25 text-white py-2 shadow-none" placeholder="Cth: 08123456789">
           </div>
           
-          <div class="mb-4">
+          <div class="mb-3">
             <label class="form-label text-secondary small fw-bold">Alamat Email</label>
-            <input type="email" v-model="form.email" class="form-control form-control-lg bg-black border-secondary border-opacity-25 text-white shadow-none" placeholder="Cth: budi@email.com">
+            <input type="email" v-model="form.email" class="form-control bg-dark border-secondary border-opacity-25 text-white py-2 shadow-none" placeholder="Cth: budi@email.com">
           </div>
 
           <!-- Input Dinamis Berdasarkan Master Fields -->
           <template v-if="fields && fields.length > 0">
-            <div v-for="field in fields" :key="field.id" class="mb-4">
+            <div v-for="field in fields" :key="field.id" class="mb-3">
               <label class="form-label text-secondary small fw-bold">
                 {{ field.label }} 
                 <span v-if="field.isRequired" class="text-danger">*</span>
@@ -79,7 +80,7 @@
                 v-if="field.type === 'text'" 
                 type="text" 
                 v-model="form.dynamicData[field.fieldKey]" 
-                class="form-control form-control-lg bg-black border-secondary border-opacity-25 text-white shadow-none" 
+                class="form-control bg-dark border-secondary border-opacity-25 text-white py-2 shadow-none" 
                 :required="field.isRequired"
                 :placeholder="'Masukkan ' + field.label"
               >
@@ -87,7 +88,7 @@
                 v-else-if="field.type === 'number'" 
                 type="number" 
                 v-model="form.dynamicData[field.fieldKey]" 
-                class="form-control form-control-lg bg-black border-secondary border-opacity-25 text-white shadow-none" 
+                class="form-control bg-dark border-secondary border-opacity-25 text-white py-2 shadow-none" 
                 :required="field.isRequired"
                 placeholder="0"
               >
@@ -95,7 +96,7 @@
                 v-else-if="field.type === 'date'" 
                 type="date" 
                 v-model="form.dynamicData[field.fieldKey]" 
-                class="form-control form-control-lg bg-black border-secondary border-opacity-25 text-white shadow-none" 
+                class="form-control bg-dark border-secondary border-opacity-25 text-white py-2 shadow-none" 
                 :required="field.isRequired"
               >
             </div>
@@ -106,7 +107,7 @@
 
       <!-- TOMBOL SIMPAN -->
       <div>
-        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold py-3 shadow text-dark rounded-pill" :disabled="isLoading">
+        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-pill shadow-sm text-dark" :disabled="isLoading">
           {{ isLoading ? 'Menyimpan Perubahan...' : 'Simpan Perubahan' }}
         </button>
       </div>
@@ -125,12 +126,13 @@ const memberId = route.params.id
 
 const isLoading = ref(false)
 const fileInput = ref(null)
+const photoPreview = ref(null)
+let selectedFile = null // Menyimpan file mentah yang dikompres untuk FormData
 
 const form = ref({
   name: '',
   phoneNumber: '',
   email: '',
-  photoPath: '',
   dynamicData: {}
 })
 
@@ -143,7 +145,7 @@ if (memberData.value) {
   form.value.name = memberData.value.name || ''
   form.value.phoneNumber = memberData.value.phoneNumber || ''
   form.value.email = memberData.value.email || ''
-  form.value.photoPath = memberData.value.photoPath || ''
+  photoPreview.value = memberData.value.photoPath || ''
   
   try {
     form.value.dynamicData = typeof memberData.value.dynamicData === 'string' 
@@ -158,18 +160,39 @@ const triggerFileInput = () => {
   if (fileInput.value) fileInput.value.click()
 }
 
+// Fungsi kompresi gambar otomatis via Canvas sebelum masuk ke FormData
 const handlePhotoUpload = (event) => {
   const file = event.target.files[0]
   if (file) {
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Ukuran foto maksimal 2MB.")
-      event.target.value = ''
-      return
-    }
-
     const reader = new FileReader()
     reader.onload = (e) => {
-      form.value.photoPath = e.target.result
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
+
+        const MAX_WIDTH = 800
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width)
+          width = MAX_WIDTH
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+
+        // Konversi hasil canvas ke Blob (File) agar bisa dikirim via FormData
+        canvas.toBlob((blob) => {
+          if (blob) {
+            selectedFile = new File([blob], file.name || 'photo.jpg', { type: 'image/jpeg' })
+            photoPreview.value = canvas.toDataURL('image/jpeg', 0.7) // Tampilkan preview instan
+          }
+        }, 'image/jpeg', 0.7)
+      }
+      img.src = e.target.result
     }
     reader.readAsDataURL(file)
   }
@@ -178,9 +201,21 @@ const handlePhotoUpload = (event) => {
 const updateMember = async () => {
   isLoading.value = true
   try {
+    const formData = new FormData()
+    formData.append('name', form.value.name)
+    formData.append('phoneNumber', form.value.phoneNumber || '')
+    formData.append('email', form.value.email || '')
+    
+    // Lampirkan file foto hanya jika user memilih foto baru
+    if (selectedFile) {
+      formData.append('photo', selectedFile)
+    }
+    
+    formData.append('dynamicData', JSON.stringify(form.value.dynamicData))
+
     await $fetch(`/api/members/${memberId}`, {
       method: 'PUT',
-      body: form.value
+      body: formData
     })
     
     alert('Data member berhasil diperbarui!')
