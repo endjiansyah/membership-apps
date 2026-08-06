@@ -46,6 +46,9 @@
           {{ member.isActive ? 'Nonaktifkan' : 'Aktifkan' }}
         </button>
       </div>
+      <button v-if="!member.isActive" @click="deleteMember" class="btn btn-outline-danger w-100 fw-bold rounded-pill py-3 mt-1 border-danger border-opacity-50" :disabled="isProcessing">
+          Hapus Member Permanen
+        </button>
       </div> 
 
       <!-- STATISTIK KEHADIRAN -->
@@ -401,6 +404,24 @@ const toggleStatus = async () => {
     alert('Gagal mengubah status.')
   } finally {
     isProcessing.value = false
+  }
+}
+
+const deleteMember = async () => {
+  // Konfirmasi ganda untuk mencegah salah klik
+  if (!confirm('PERINGATAN: Anda yakin ingin menghapus member ini beserta seluruh riwayat kehadirannya? Tindakan ini tidak dapat dibatalkan.')) return
+  
+  isProcessing.value = true
+  try {
+    await $fetch(`/api/members/${member.value.id}`, {
+      method: 'DELETE'
+    })
+    
+    alert('Member berhasil dihapus secara permanen.')
+    navigateTo('/members') // Otomatis lemparkan pengguna kembali ke halaman List Member
+  } catch (error) {
+    alert(error.data?.statusMessage || 'Gagal menghapus member.')
+    isProcessing.value = false // Hanya matikan loading jika gagal, jika sukses biarkan loading karena akan pindah halaman
   }
 }
 
