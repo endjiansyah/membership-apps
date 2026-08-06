@@ -92,7 +92,7 @@
           
           <!-- Tombol Aksi Bawah Kartu -->
           <div class="d-flex gap-2">
-            <button @click.prevent="showQR(member)" class="btn btn-primary btn-sm rounded-pill fw-bold px-3 py-2 w-100">
+            <button @click.prevent="showQR(member)" class="btn btn-outline-info btn-sm rounded-pill fw-bold px-3 py-2 w-100">
               Download QR
             </button>
             <NuxtLink :to="`/members/${member.id}`" class="btn btn-outline-secondary btn-sm rounded-pill fw-bold px-3 py-2 w-100 text-white">
@@ -121,7 +121,7 @@
         </p>
 
         <button v-if="qrImageUrl" @click="downloadCard" class="btn btn-primary w-100 rounded-pill fw-bold mb-2 shadow py-3 text-dark" :disabled="isDownloading">
-          {{ isDownloading ? 'Memproses Unduhan...' : 'Download Kartu' }}
+          {{ isDownloading ? 'Memproses Unduhan...' : 'Download QR' }}
         </button>
         
         <button class="btn btn-outline-secondary w-100 rounded-pill fw-bold py-3 mt-1 text-white" @click="selectedMember = null">

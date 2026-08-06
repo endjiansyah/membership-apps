@@ -33,6 +33,11 @@
       </div>
 
       <!-- AREA AKSI UTAMA -->
+       <div class="mb-4">
+        <!-- Tombol Download QR Baru -->
+        <button @click="showQR" class="btn btn-outline-info w-100 fw-bold rounded-pill py-3 mb-2 border-info border-opacity-50">
+          Download QR Code
+        </button>
       <div class="d-flex gap-2 mb-4">
         <button @click="manualCheckIn" class="btn btn-primary w-100 fw-bold rounded-pill py-3 text-dark shadow-sm" :disabled="isProcessing">
           Catat Hadir Manual
@@ -41,6 +46,7 @@
           {{ member.isActive ? 'Nonaktifkan' : 'Aktifkan' }}
         </button>
       </div>
+      </div> 
 
       <!-- STATISTIK KEHADIRAN -->
       <div class="mb-4">
@@ -201,12 +207,41 @@
       </div>
 
     </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL POPUP DOWNLOAD KARTU QR CODE         -->
+    <!-- ========================================== -->
+    <div v-if="showQrModal" class="position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-75 d-flex justify-content-center align-items-center px-3" style="z-index: 1060;" @click.self="showQrModal = false">
+      <div class="card bg-dark border border-secondary border-opacity-50 rounded-4 p-4 text-center shadow-lg w-100" style="max-width: 350px;">
+        
+        <h4 class="fw-bold mb-1 text-white mb-4">{{ member.name }}</h4>
+        
+        <div class="bg-white p-2 rounded-4 mb-4 d-inline-block mx-auto shadow-sm">
+          <img v-if="qrImageUrl" :src="qrImageUrl" alt="QR Code Member" class="rounded-3" style="width: 220px; height: 220px; display: block;" />
+          <div v-else class="spinner-border text-primary my-5" role="status"></div>
+        </div>
+
+        <p class="small mb-4 font-monospace text-secondary bg-black p-2 rounded-3">
+          ID: {{ member.uuid }}
+        </p>
+
+        <button v-if="qrImageUrl" @click="downloadCard" class="btn btn-primary w-100 rounded-pill fw-bold mb-2 shadow py-3 text-dark" :disabled="isDownloading">
+          {{ isDownloading ? 'Memproses Unduhan...' : 'Download QR' }}
+        </button>
+        
+        <button class="btn btn-outline-secondary w-100 rounded-pill fw-bold py-3 mt-1 text-white" @click="showQrModal = false">
+          Tutup Layar
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import QRCode from 'qrcode'
+
 
 const route = useRoute()
 const memberId = route.params.id
@@ -366,6 +401,107 @@ const toggleStatus = async () => {
     alert('Gagal mengubah status.')
   } finally {
     isProcessing.value = false
+  }
+}
+
+const downloadQR = async () => {
+  if (!member.value?.uuid) {
+    return alert('Data UUID tidak ditemukan.')
+  }
+  
+  isProcessing.value = true
+  try {
+    // Memanfaatkan public API untuk generate QR dengan UUID member
+    // (Bisa disesuaikan jika Anda memakai library lokal di halaman List)
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${member.value.uuid}`
+    
+    // Fetch blob agar memicu file download, bukan open-in-new-tab
+    const response = await fetch(qrUrl)
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    
+    const link = document.createElement('a')
+    link.href = url
+    // Format nama file: QR-NamaMember-12345.png
+    link.download = `QR-${member.value.name.replace(/\s+/g, '-')}-${member.value.id}.png`
+    
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (error) {
+    alert('Terjadi kesalahan saat mengunduh QR Code.')
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+// STATE BARU UNTUK KARTU QR
+const showQrModal = ref(false)
+const qrImageUrl = ref('')
+const isDownloading = ref(false)
+
+// FUNGSI MEMBUKA MODAL DAN GENERATE QR
+const showQR = async () => {
+  if (!member.value?.uuid) return alert('Data UUID tidak ditemukan.')
+  
+  showQrModal.value = true
+  qrImageUrl.value = ''
+  try {
+    qrImageUrl.value = await QRCode.toDataURL(member.value.uuid, { width: 500, margin: 1, color: { dark: '#000000', light: '#ffffff' } })
+  } catch (err) {
+    console.error('Gagal membuat QR:', err)
+  }
+}
+
+// FUNGSI MENGGAMBAR KARTU DAN MENDOWNLOAD (Persis dengan halaman List)
+const downloadCard = async () => {
+  if (!member.value || !qrImageUrl.value) return
+  isDownloading.value = true
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.width = 800
+    canvas.height = 1050
+    const ctx = canvas.getContext('2d')
+
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.fillStyle = '#0f172a'
+    ctx.font = 'bold 56px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText(member.value.name, canvas.width / 2, 120)
+    ctx.fillStyle = '#64748b'
+    ctx.font = '26px sans-serif'
+    ctx.fillText('Tunjukkan QR Code ini untuk scan Membership', canvas.width / 2, 180)
+
+    await new Promise((resolve, reject) => {
+      const qrImage = new Image()
+      qrImage.crossOrigin = 'anonymous'
+      qrImage.onload = () => { ctx.drawImage(qrImage, 90, 240, 620, 620); resolve() }
+      qrImage.onerror = reject
+      qrImage.src = qrImageUrl.value
+    })
+
+    ctx.strokeStyle = '#e2e8f0'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(90, 900)
+    ctx.lineTo(710, 900)
+    ctx.stroke()
+    ctx.fillStyle = '#475569'
+    ctx.font = '22px monospace'
+    ctx.textAlign = 'center'
+    ctx.fillText(`ID: ${member.value.uuid}`, canvas.width / 2, 960)
+
+    const url = canvas.toDataURL('image/png')
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `Member_Card_${member.value.name.replace(/\s+/g, '_')}.png`
+    link.click()
+  } catch (error) {
+    alert('Terjadi kesalahan saat mengunduh kartu.')
+  } finally {
+    isDownloading.value = false
   }
 }
 </script>
