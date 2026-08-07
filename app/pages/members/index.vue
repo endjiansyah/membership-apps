@@ -91,12 +91,14 @@
             </span>
           </div>
           
+
           <!-- Tombol Aksi Bawah Kartu -->
           <div class="d-flex gap-2">
-            <button @click.prevent="showQR(member)" class="btn btn-outline-info btn-sm rounded-pill fw-bold px-3 py-2 w-100">
+            <!-- Tambahan: style="font-size: 0.75rem;" (Sedikit lebih kecil karena tombolnya kecil) -->
+            <button @click.prevent="showQR(member)" class="btn btn-primary btn-sm rounded-pill fw-bold px-3 py-2 w-100" style="font-size: 0.75rem;">
               QR
             </button>
-            <NuxtLink :to="`/members/${member.id}`" class="btn btn-outline-secondary btn-sm rounded-pill fw-bold px-3 py-2 w-100 text-white">
+            <NuxtLink :to="`/members/${member.id}`" class="btn btn-outline-secondary btn-sm rounded-pill fw-bold px-3 py-2 w-100 text-white" style="font-size: 0.75rem;">
               Details
             </NuxtLink>
           </div>
@@ -105,28 +107,34 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- MODAL POPUP DOWNLOAD KARTU QR CODE -->
+    <!-- MODAL POPUP DOWNLOAD KARTU QR CODE         -->
     <!-- ========================================== -->
     <div v-if="selectedMember" class="position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-75 d-flex justify-content-center align-items-center px-3" style="z-index: 1060;" @click.self="selectedMember = null">
-      <div class="card bg-dark border border-secondary border-opacity-50 rounded-4 p-4 text-center shadow-lg w-100" style="max-width: 350px;">
+      <!-- PERBAIKAN 1: p-4 -> p-3, max-width diperkecil dikit -->
+      <div class="card bg-dark border border-secondary border-opacity-50 rounded-4 p-3 text-center shadow-lg w-100" style="max-width: 320px;">
         
-        <h4 class="fw-bold mb-1 text-white mb-4">{{ selectedMember.name }}</h4>
+        <!-- PERBAIKAN 2: Judul mb-4 -> mb-3, h4 -> h6, font size dikecilkan -->
+        <h6 class="fw-bold text-white mb-3" style="font-size: 1rem;">{{ selectedMember.name }}</h6>
         
-        <div class="bg-white p-2 rounded-4 mb-4 d-inline-block mx-auto shadow-sm">
-          <img v-if="qrImageUrl" :src="qrImageUrl" alt="QR Code Member" class="rounded-3" style="width: 220px; height: 220px; display: block;" />
-          <div v-else class="spinner-border text-primary my-5" role="status"></div>
+        <!-- PERBAIKAN 3: mb-4 -> mb-3, ukuran QR responsif dikit -->
+        <div class="bg-white p-2 rounded-4 mb-3 d-inline-block mx-auto shadow-sm">
+          <img v-if="qrImageUrl" :src="qrImageUrl" alt="QR Code Member" class="rounded-3" style="width: 180px; height: 180px; display: block;" />
+          <div v-else class="spinner-border text-primary my-4" role="status"></div>
         </div>
 
-        <p class="small mb-4 font-monospace text-secondary bg-black p-2 rounded-3">
+        <!-- PERBAIKAN 4: mb-4 -> mb-3, font size dikecilkan -->
+        <p class="small mb-3 font-monospace text-secondary bg-black p-2 rounded-3" style="font-size: 0.7rem; word-break: break-all;">
           ID: {{ selectedMember.uuid }}
         </p>
 
-        <button v-if="qrImageUrl" @click="downloadCard" class="btn btn-primary w-100 rounded-pill fw-bold mb-2 shadow py-3 text-dark" :disabled="isDownloading">
-          {{ isDownloading ? 'Memproses Unduhan...' : 'Download QR' }}
+        <!-- PERBAIKAN 5: py-3 -> py-2, font size disesuaikan, teks disingkat -->
+        <button v-if="qrImageUrl" @click="downloadCard" class="btn btn-primary w-100 rounded-pill fw-bold mb-2 shadow py-2 text-dark" style="font-size: 0.8rem;" :disabled="isDownloading">
+          {{ isDownloading ? 'Memproses...' : 'Download Kartu' }}
         </button>
         
-        <button class="btn btn-outline-secondary w-100 rounded-pill fw-bold py-3 mt-1 text-white" @click="selectedMember = null">
-          Tutup Layar
+        <!-- PERBAIKAN 6: py-3 -> py-2, teks disingkat -->
+        <button class="btn btn-outline-secondary w-100 rounded-pill fw-bold py-2 mt-1 text-white" style="font-size: 0.8rem;" @click="selectedMember = null">
+          Tutup
         </button>
       </div>
     </div>

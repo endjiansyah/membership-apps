@@ -91,7 +91,8 @@
 
       <!-- TOMBOL SIMPAN -->
       <div>
-        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-pill shadow-sm text-dark" :disabled="isLoading">
+        <!-- Tambahan: style="font-size: 0.8rem;" -->
+        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-pill shadow-sm text-dark" style="font-size: 0.8rem;" :disabled="isLoading">
           {{ isLoading ? 'Menyimpan...' : 'Simpan Member' }}
         </button>
       </div>

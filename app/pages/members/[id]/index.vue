@@ -35,21 +35,24 @@
       <!-- AREA AKSI UTAMA -->
       <div class="mb-3 px-1">
         <!-- Tombol Download QR -->
-        <button @click="showQR" class="btn btn-outline-info w-100 fw-bold rounded-pill py-2 mb-2 border-info border-opacity-50 text-info">
+        <!-- Tambahan: style="font-size: 0.8rem;" -->
+        <button @click="showQR" class="btn btn-outline-info w-100 fw-bold rounded-pill py-2 mb-2 border-info border-opacity-50" style="font-size: 0.8rem;">
           Download QR
         </button>
         
         <div class="d-flex gap-2 mb-2">
-          <button @click="manualCheckIn" class="btn btn-primary w-100 fw-bold rounded-pill py-2 text-dark shadow-sm" style="font-size: 0.85rem;" :disabled="isProcessing">
+          <!-- Tambahan: Ganti font-size yang lama menjadi 0.8rem -->
+          <button @click="manualCheckIn" class="btn btn-primary w-100 fw-bold rounded-pill py-2 text-dark shadow-sm" style="font-size: 0.8rem;" :disabled="isProcessing">
             Hadir Manual
           </button>
-          <button @click="toggleStatus" class="btn w-100 fw-bold rounded-pill py-2" style="font-size: 0.85rem;" :class="member.isActive ? 'btn-dark border border-secondary border-opacity-25 text-danger' : 'btn-success text-white'" :disabled="isProcessing">
+          <button @click="toggleStatus" class="btn w-100 fw-bold rounded-pill py-2" style="font-size: 0.8rem;" :class="member.isActive ? 'btn-dark border border-secondary border-opacity-25 text-danger' : 'btn-success text-white'" :disabled="isProcessing">
             {{ member.isActive ? 'Nonaktifkan' : 'Aktifkan' }}
           </button>
         </div>
 
         <!-- Tombol Hapus -->
-        <button v-if="!member.isActive" @click="deleteMember" class="btn btn-outline-danger w-100 fw-bold rounded-pill py-2 mt-1 border-danger border-opacity-50" style="font-size: 0.85rem;" :disabled="isProcessing">
+        <!-- Tambahan: Ganti font-size yang lama menjadi 0.8rem -->
+        <button v-if="!member.isActive" @click="deleteMember" class="btn btn-outline-danger w-100 fw-bold rounded-pill py-2 mt-1 border-danger border-opacity-50" style="font-size: 0.8rem;" :disabled="isProcessing">
           Hapus Permanen
         </button>
       </div>
@@ -218,25 +221,31 @@
     <!-- MODAL POPUP DOWNLOAD KARTU QR CODE         -->
     <!-- ========================================== -->
     <div v-if="showQrModal" class="position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-75 d-flex justify-content-center align-items-center px-3" style="z-index: 1060;" @click.self="showQrModal = false">
-      <div class="card bg-dark border border-secondary border-opacity-50 rounded-4 p-4 text-center shadow-lg w-100" style="max-width: 350px;">
+      <!-- PERBAIKAN 1: p-4 -> p-3, max-width diperkecil dikit -->
+      <div class="card bg-dark border border-secondary border-opacity-50 rounded-4 p-3 text-center shadow-lg w-100" style="max-width: 320px;">
         
-        <h4 class="fw-bold mb-1 text-white mb-4">{{ member.name }}</h4>
+        <!-- PERBAIKAN 2: Judul mb-4 -> mb-3, font size dikecilkan -->
+        <h6 class="fw-bold text-white mb-3" style="font-size: 1rem;">{{ member.name }}</h6>
         
-        <div class="bg-white p-2 rounded-4 mb-4 d-inline-block mx-auto shadow-sm">
-          <img v-if="qrImageUrl" :src="qrImageUrl" alt="QR Code Member" class="rounded-3" style="width: 220px; height: 220px; display: block;" />
-          <div v-else class="spinner-border text-primary my-5" role="status"></div>
+        <!-- PERBAIKAN 3: mb-4 -> mb-3, ukuran QR responsif dikit -->
+        <div class="bg-white p-2 rounded-4 mb-3 d-inline-block mx-auto shadow-sm">
+          <img v-if="qrImageUrl" :src="qrImageUrl" alt="QR Code Member" class="rounded-3" style="width: 180px; height: 180px; display: block;" />
+          <div v-else class="spinner-border text-primary my-4" role="status"></div>
         </div>
 
-        <p class="small mb-4 font-monospace text-secondary bg-black p-2 rounded-3">
+        <!-- PERBAIKAN 4: mb-4 -> mb-3, font size dikecilkan -->
+        <p class="small mb-3 font-monospace text-secondary bg-black p-2 rounded-3" style="font-size: 0.7rem; word-break: break-all;">
           ID: {{ member.uuid }}
         </p>
 
-        <button v-if="qrImageUrl" @click="downloadCard" class="btn btn-primary w-100 rounded-pill fw-bold mb-2 shadow py-3 text-dark" :disabled="isDownloading">
-          {{ isDownloading ? 'Memproses Unduhan...' : 'Download QR' }}
+        <!-- PERBAIKAN 5: py-3 -> py-2, font size disesuaikan, teks disingkat -->
+        <button v-if="qrImageUrl" @click="downloadCard" class="btn btn-primary w-100 rounded-pill fw-bold mb-2 shadow py-2 text-dark" style="font-size: 0.8rem;" :disabled="isDownloading">
+          {{ isDownloading ? 'Memproses...' : 'Download Kartu' }}
         </button>
         
-        <button class="btn btn-outline-secondary w-100 rounded-pill fw-bold py-3 mt-1 text-white" @click="showQrModal = false">
-          Tutup Layar
+        <!-- PERBAIKAN 6: py-3 -> py-2, teks disingkat -->
+        <button class="btn btn-outline-secondary w-100 rounded-pill fw-bold py-2 mt-1 text-white" style="font-size: 0.8rem;" @click="showQrModal = false">
+          Tutup
         </button>
       </div>
     </div>
