@@ -1,5 +1,6 @@
 <template>
-  <div class="container-fluid px-3 py-3 pb-5 mb-5" style="max-width: 600px;">
+  <!-- px-1 untuk mobile agar lebih lega, px-md-3 untuk desktop -->
+  <div class="container-fluid px-1 px-md-3 py-2 py-md-3 pb-5 mb-5" style="max-width: 600px;">
     
     <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4 p-2">
@@ -93,7 +94,7 @@
           <!-- Tombol Aksi Bawah Kartu -->
           <div class="d-flex gap-2">
             <button @click.prevent="showQR(member)" class="btn btn-outline-info btn-sm rounded-pill fw-bold px-3 py-2 w-100">
-              Download QR
+              QR
             </button>
             <NuxtLink :to="`/members/${member.id}`" class="btn btn-outline-secondary btn-sm rounded-pill fw-bold px-3 py-2 w-100 text-white">
               Details

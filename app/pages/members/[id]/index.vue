@@ -1,5 +1,5 @@
 <template>
-  <div class="container-fluid px-0 py-3 pb-5 mb-5" style="max-width: 600px;">
+  <div class="container-fluid px-0 py-1 py-md-3 pb-5 mb-5" style="max-width: 600px;">
     
 
     <div v-if="pending" class="text-center py-5">
@@ -33,23 +33,26 @@
       </div>
 
       <!-- AREA AKSI UTAMA -->
-       <div class="mb-4">
-        <!-- Tombol Download QR Baru -->
-        <button @click="showQR" class="btn btn-outline-info w-100 fw-bold rounded-pill py-3 mb-2 border-info border-opacity-50">
-          Download QR Code
+      <div class="mb-3 px-1">
+        <!-- Tombol Download QR -->
+        <button @click="showQR" class="btn btn-outline-info w-100 fw-bold rounded-pill py-2 mb-2 border-info border-opacity-50 text-info">
+          Download QR
         </button>
-      <div class="d-flex gap-2 mb-4">
-        <button @click="manualCheckIn" class="btn btn-primary w-100 fw-bold rounded-pill py-3 text-dark shadow-sm" :disabled="isProcessing">
-          Catat Hadir Manual
-        </button>
-        <button @click="toggleStatus" class="btn w-100 fw-bold rounded-pill py-3" :class="member.isActive ? 'btn-dark border border-secondary border-opacity-25 text-danger' : 'btn-success text-white'" :disabled="isProcessing">
-          {{ member.isActive ? 'Nonaktifkan' : 'Aktifkan' }}
+        
+        <div class="d-flex gap-2 mb-2">
+          <button @click="manualCheckIn" class="btn btn-primary w-100 fw-bold rounded-pill py-2 text-dark shadow-sm" style="font-size: 0.85rem;" :disabled="isProcessing">
+            Hadir Manual
+          </button>
+          <button @click="toggleStatus" class="btn w-100 fw-bold rounded-pill py-2" style="font-size: 0.85rem;" :class="member.isActive ? 'btn-dark border border-secondary border-opacity-25 text-danger' : 'btn-success text-white'" :disabled="isProcessing">
+            {{ member.isActive ? 'Nonaktifkan' : 'Aktifkan' }}
+          </button>
+        </div>
+
+        <!-- Tombol Hapus -->
+        <button v-if="!member.isActive" @click="deleteMember" class="btn btn-outline-danger w-100 fw-bold rounded-pill py-2 mt-1 border-danger border-opacity-50" style="font-size: 0.85rem;" :disabled="isProcessing">
+          Hapus Permanen
         </button>
       </div>
-      <button v-if="!member.isActive" @click="deleteMember" class="btn btn-outline-danger w-100 fw-bold rounded-pill py-3 mt-1 border-danger border-opacity-50" :disabled="isProcessing">
-          Hapus Member Permanen
-        </button>
-      </div> 
 
       <!-- STATISTIK KEHADIRAN -->
       <div class="mb-4">

@@ -91,8 +91,8 @@
 
       <!-- TOMBOL SIMPAN -->
       <div>
-        <button type="submit" class="btn btn-primary w-100 fw-bold py-3 rounded-pill shadow-sm text-dark" :disabled="isLoading">
-          {{ isLoading ? 'Menyimpan & Mengompresi Foto...' : 'Simpan & Buat Profil' }}
+        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-pill shadow-sm text-dark" :disabled="isLoading">
+          {{ isLoading ? 'Menyimpan...' : 'Simpan Member' }}
         </button>
       </div>
 

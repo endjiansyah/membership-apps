@@ -131,10 +131,16 @@
                   </span>
                 </div>
               </div>
-              <!-- Jangan biarkan admin menghapus dirinya sendiri -->
-              <button v-if="user.id !== authUser?.id" @click="deleteUser(user.id)" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" style="font-size: 0.7rem;">
-                Hapus
-              </button>
+              
+              <!-- Tombol Aksi (Reset Sandi & Hapus) -->
+              <div v-if="user.id !== authUser?.id" class="d-flex gap-2">
+                <button @click="resetPassword(user.id)" class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-bold" style="font-size: 0.7rem;">
+                  Reset Sandi
+                </button>
+                <button @click="deleteUser(user.id)" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" style="font-size: 0.7rem;">
+                  Hapus
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -218,6 +224,26 @@ const saveUser = async () => {
     alert(error.data?.statusMessage || 'Gagal membuat akun petugas.')
   } finally {
     isLoadingUser.value = false
+  }
+}
+
+const resetPassword = async (userId) => {
+  const newPassword = prompt('Masukkan password baru untuk petugas ini (minimal 6 karakter):')
+  if (!newPassword) return
+
+  if (newPassword.length < 6) {
+    alert('Password baru minimal harus 6 karakter.')
+    return
+  }
+
+  try {
+    await $fetch(`/api/users/${userId}/reset-password`, {
+      method: 'PUT',
+      body: { newPassword }
+    })
+    alert('Password petugas berhasil direset!')
+  } catch (error) {
+    alert(error.data?.statusMessage || 'Gagal mereset password.')
   }
 }
 

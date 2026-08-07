@@ -59,7 +59,7 @@ async function handleLogout() {
     </header>
 
     <!-- AREA KONTEN UTAMA -->
-    <main class="flex-grow-1 p-3 p-md-4 pb-5 mb-5 mb-md-0">
+    <main class="flex-grow-1 p-md-4 pb-5 mb-5 mb-md-0">
       <div class="container-fluid" style="max-width: 1000px;">
         <slot />
       </div>
