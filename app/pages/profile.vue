@@ -1,6 +1,10 @@
 <template>
-  <div class="container-fluid px-0 py-3 pb-5 mb-5" style="max-width: 600px;">
-
+  <div class="container-fluid px-1 px-md-3 py-2 py-md-3 pb-5 mb-5" style="max-width: 600px;">
+    
+    <!-- HEADER -->
+    <div class="d-flex align-items-center mb-4 px-2 sticky-top bg-black bg-opacity-75 py-2" style="z-index: 1020; backdrop-filter: blur(8px);">
+      <h6 class="mb-0 fw-bold text-secondary text-uppercase tracking-wider mx-auto" style="font-size: 0.75rem; letter-spacing: 1px;">Profil Saya</h6>
+    </div>
 
     <!-- LOADING STATE -->
     <div v-if="pending" class="text-center py-5">
@@ -8,18 +12,19 @@
     </div>
 
     <!-- KONTEN PROFIL -->
-    <div v-else-if="user" class="px-3">
-      <div class="card bg-dark border border-secondary border-opacity-25 rounded-4 shadow-sm mb-4">
-        <div class="card-body p-4">
+    <div v-else-if="user" class="px-2">
+      <!-- PERBAIKAN: Padding card dikurangi jadi p-3 -->
+      <div class="card bg-dark border border-secondary border-opacity-25 rounded-4 shadow-sm mb-3">
+        <div class="card-body p-3">
           
           <!-- Info Singkat -->
-          <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom border-secondary border-opacity-25">
-            <div class="d-inline-flex justify-content-center align-items-center bg-secondary bg-opacity-25 text-white fw-bold fs-3 rounded-circle" style="width: 60px; height: 60px;">
+          <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom border-secondary border-opacity-25">
+            <div class="d-inline-flex justify-content-center align-items-center bg-secondary bg-opacity-25 text-white fw-bold fs-3 rounded-circle" style="width: 50px; height: 50px;">
               {{ user.name.substring(0, 1).toUpperCase() }}
             </div>
             <div>
-              <h5 class="fw-bold text-white mb-0">{{ user.name }}</h5>
-              <span class="badge mt-1" :class="user.role === 'SUPER_ADMIN' ? 'bg-primary text-dark' : 'bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25'">
+              <h6 class="fw-bold text-white mb-0" style="font-size: 1rem;">{{ user.name }}</h6>
+              <span class="badge mt-1" style="font-size: 0.65rem;" :class="user.role === 'SUPER_ADMIN' ? 'bg-primary text-dark' : 'bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25'">
                 {{ user.role }}
               </span>
             </div>
@@ -28,14 +33,13 @@
           <!-- Form Edit -->
           <form @submit.prevent="updateProfile">
             <div class="mb-3">
-              <label class="form-label fw-bold text-secondary small">Nama Lengkap</label>
-              <input type="text" v-model="form.name" class="form-control bg-black text-white border-secondary border-opacity-25 rounded-3" required>
+              <label class="form-label fw-bold text-secondary mb-1" style="font-size: 0.75rem;">Nama Lengkap</label>
+              <input type="text" v-model="form.name" class="form-control form-control-sm bg-black text-white border-secondary border-opacity-25 rounded-3 py-2" required>
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-bold text-secondary small">Email Login</label>
-              <!-- Sengaja di-disabled agar tidak bisa ubah email sembarangan -->
-              <input type="email" :value="user.email" class="form-control bg-black text-secondary border-secondary border-opacity-25 rounded-3" disabled>
+              <label class="form-label fw-bold text-secondary mb-1" style="font-size: 0.75rem;">Email Login</label>
+              <input type="email" :value="user.email" class="form-control form-control-sm bg-black text-secondary border-secondary border-opacity-25 rounded-3 py-2" disabled>
               <small class="text-secondary d-block mt-1" style="font-size: 0.65rem;">Email tidak dapat diubah.</small>
             </div>
 
@@ -44,22 +48,23 @@
               <h6 class="fw-bold text-white mb-3" style="font-size: 0.85rem;">Ubah Password (Opsional)</h6>
               
               <div class="mb-3">
-                <label class="form-label fw-bold text-secondary small">Password Lama</label>
-                <input type="password" v-model="form.oldPassword" class="form-control bg-black text-white border-secondary border-opacity-25 rounded-3" placeholder="Masukkan jika ingin ubah sandi">
+                <label class="form-label fw-bold text-secondary mb-1" style="font-size: 0.75rem;">Password Lama</label>
+                <input type="password" v-model="form.oldPassword" class="form-control form-control-sm bg-black text-white border-secondary border-opacity-25 rounded-3 py-2" placeholder="Masukkan jika ingin ubah sandi">
               </div>
 
               <div class="mb-3">
-                <label class="form-label fw-bold text-secondary small">Password Baru</label>
-                <input type="password" v-model="form.newPassword" class="form-control bg-black text-white border-secondary border-opacity-25 rounded-3" placeholder="Password baru">
+                <label class="form-label fw-bold text-secondary mb-1" style="font-size: 0.75rem;">Password Baru</label>
+                <input type="password" v-model="form.newPassword" class="form-control form-control-sm bg-black text-white border-secondary border-opacity-25 rounded-3 py-2" placeholder="Password baru">
               </div>
 
               <div class="mb-4">
-                <label class="form-label fw-bold text-secondary small">Konfirmasi Password Baru</label>
-                <input type="password" v-model="form.confirmPassword" class="form-control bg-black text-white border-secondary border-opacity-25 rounded-3" placeholder="Ketik ulang password baru">
+                <label class="form-label fw-bold text-secondary mb-1" style="font-size: 0.75rem;">Konfirmasi Password Baru</label>
+                <input type="password" v-model="form.confirmPassword" class="form-control form-control-sm bg-black text-white border-secondary border-opacity-25 rounded-3 py-2" placeholder="Ketik ulang password baru">
               </div>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100 fw-bold rounded-pill py-3 shadow-sm" :disabled="isSaving">
+            <!-- PERBAIKAN: Tombol py-2 dan font 0.85rem -->
+            <button type="submit" class="btn btn-primary w-100 fw-bold rounded-pill py-2 shadow-sm text-dark" style="font-size: 0.85rem;" :disabled="isSaving">
               {{ isSaving ? 'Menyimpan...' : 'Simpan Perubahan' }}
             </button>
           </form>
@@ -67,9 +72,9 @@
         </div>
       </div>
       
-      <!-- Tombol Logout -->
-      <button @click="handleLogout" class="btn btn-outline-danger w-100 fw-bold rounded-pill py-2 border-danger border-opacity-50">
-        Logout
+      <!-- PERBAIKAN: Tombol py-2 dan font 0.85rem -->
+      <button @click="handleLogout" class="btn btn-outline-danger w-100 fw-bold rounded-pill py-2 border-danger border-opacity-50" style="font-size: 0.85rem;">
+        Keluar dari Sistem
       </button>
       
     </div>
@@ -79,7 +84,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 
-// Ingat: kita menggunakan authData.value?.user untuk mengambil data dari /api/auth/me
 const { data: authData, pending, refresh } = await useFetch('/api/auth/me', { server: false })
 const user = computed(() => authData.value?.user)
 
@@ -92,7 +96,6 @@ const form = ref({
   confirmPassword: ''
 })
 
-// Isi otomatis nama di form saat data user berhasil dimuat
 watch(user, (newVal) => {
   if (newVal) {
     form.value.name = newVal.name
@@ -100,7 +103,6 @@ watch(user, (newVal) => {
 }, { immediate: true })
 
 const updateProfile = async () => {
-  // Validasi lokal jika ada niat ubah password
   if (form.value.newPassword) {
     if (!form.value.oldPassword) return alert('Password lama wajib diisi!')
     if (form.value.newPassword !== form.value.confirmPassword) return alert('Konfirmasi password tidak cocok!')
@@ -120,12 +122,9 @@ const updateProfile = async () => {
     })
     
     alert('Profil berhasil diperbarui!')
-    
-    // Bersihkan kolom password agar aman
     form.value.oldPassword = ''
     form.value.newPassword = ''
     form.value.confirmPassword = ''
-    
     await refresh()
   } catch (error) {
     alert(error.data?.statusMessage || 'Gagal memperbarui profil.')
@@ -139,7 +138,7 @@ const handleLogout = async () => {
   try {
     await $fetch('/api/auth/logout', { method: 'POST' })
     const sessionCookie = useCookie('user_session')
-    sessionCookie.value = null // Hapus cookie
+    sessionCookie.value = null
     navigateTo('/login')
   } catch (err) {
     alert('Gagal logout.')
