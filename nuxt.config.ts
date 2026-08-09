@@ -2,6 +2,9 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   
+  // INI BARIS YANG SAYA LUPA MASUKKAN DI KODE SEBELUMNYA
+  modules: ['@nuxt/icon'],
+  
   // Tambahkan blok app ini untuk mengunci tema gelap secara global
   app: {
     head: {

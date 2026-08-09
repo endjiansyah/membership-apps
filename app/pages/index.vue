@@ -1,8 +1,10 @@
 <template>
-  <div class="container-fluid px-3 py-3 pb-5 mb-5" style="max-width: 600px;">
+  <!-- PERBAIKAN: Hapus container-fluid & px-3, tambahkan mx-auto agar di desktop tetap di tengah -->
+  <div class="py-2 py-md-3 pb-5 mb-5 mx-auto" style="max-width: 600px;">
     
     <!-- HEADER & REFRESH -->
-    <div class="d-flex justify-content-between align-items-center mb-4 p-2">
+    <!-- PERBAIKAN: Hapus p-2 yang tidak perlu -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
         <h4 class="mb-0 fw-bold text-white">Dashboard Analitik</h4>
       </div>
@@ -12,8 +14,9 @@
     </div>
 
     <!-- STATISTIK KARTU UTAMA -->
-    <div class="px-2 mb-4">
-      <div class="row g-3">
+    <!-- PERBAIKAN: Hapus px-2 -->
+    <div class="mb-4">
+      <div class="row g-2"> <!-- Ubah g-3 jadi g-2 agar jarak antar kartu tidak terlalu lebar di HP -->
         <div class="col-6">
           <div class="card bg-dark border border-secondary border-opacity-25 p-3 rounded-4 shadow-sm h-100 position-relative">
             <div class="text-secondary small mb-1">Kehadiran ({{ getRangeLabel(globalRange) }})</div>
@@ -30,36 +33,36 @@
     </div>
 
     <!-- AKSI CEPAT & NAVIGASI -->
-    <div class="px-2 mb-4 d-flex flex-column gap-3">
+    <!-- PERBAIKAN: Hapus px-2 -->
+    <div class="mb-4 d-flex flex-column gap-2"> <!-- Gap dikecilkan sedikit agar padat -->
       <NuxtLink to="/scanner" class="btn btn-primary w-100 fw-bold py-3 rounded-4 text-dark shadow-sm d-flex align-items-center justify-content-center gap-2">
-        <Icon name="bi:bi-camera-fill" class="fs-5"/> <span>Buka Scanner</span>
+        <Icon name="bi:qr-code-scan" class="fs-5" /> <span>Buka Scanner</span>
       </NuxtLink>
       
-      <NuxtLink v-if="authUser?.role === 'SUPER_ADMIN'" to="/logs" class="btn btn-outline-info w-100 fw-bold py-3 rounded-4 border-opacity-25 shadow-sm d-flex align-items-center justify-content-center gap-2">
-        <Icon name="bi:bi-clock-history" class="fs-5"/>
+      <NuxtLink v-if="authUser?.role === 'SUPER_ADMIN'" to="/logs" class="btn btn-warning w-100 fw-bold py-3 rounded-4  border-opacity-25 shadow-sm d-flex align-items-center justify-content-center gap-2">
+        <Icon name="bi:clock-history" class="fs-5" />
         <span>Histori Sistem</span>
       </NuxtLink>
     </div>
 
     <!-- LEADERBOARD MEMBER TERAJIN -->
-    <div class="px-2 mb-4">
+    <!-- PERBAIKAN: Hapus px-2 -->
+    <div class="mb-4">
       <div class="card bg-dark border border-secondary border-opacity-25 rounded-4 shadow-sm overflow-hidden">
         <div class="card-header bg-dark border-bottom border-secondary border-opacity-25 py-3 px-3 d-flex flex-column gap-2">
           <div class="d-flex justify-content-between align-items-center">
             <h6 class="mb-0 fw-bold text-white d-flex align-items-center gap-2">
-              <i class="bi bi-trophy-fill text-warning"></i> Member Terajin
+              <Icon name="bi:trophy-fill" class="text-warning" /> Member Terajin
             </h6>
             
-            <!-- INPUT CUSTOM LIMIT (Tekan Enter untuk Refresh) -->
             <div class="d-flex align-items-center gap-2">
               <span class="text-secondary fw-bold" style="font-size: 0.7rem;">TOP</span>
               <input type="number" v-model.lazy.number="lbLimit" min="1" class="form-control form-control-sm bg-black text-white border-secondary border-opacity-50 text-center fw-bold px-1" style="width: 50px; font-size: 0.75rem;" title="Ketik angka, lalu tekan Enter">
             </div>
           </div>
           
-          <!-- Filter Waktu Khusus Leaderboard (Default: All Time) -->
           <div class="d-flex gap-1 overflow-auto pb-1 mt-1" style="scrollbar-width: none;">
-            <button v-for="range in rangeOptions.filter(r => r.id !== 'today')" :key="`lb-${range.id}`" @click="lbRange = range.id" class="btn btn-sm rounded-pill fw-bold" style="font-size: 0.65rem;" :class="lbRange === range.id ? 'btn-warning text-dark px-3' : 'bg-black text-secondary border border-secondary border-opacity-25 px-2'">
+            <button v-for="range in rangeOptions.filter(r => r.id !== 'today')" :key="`lb-${range.id}`" @click="lbRange = range.id" class="btn btn-sm rounded-pill fw-bold text-nowrap" style="font-size: 0.65rem;" :class="lbRange === range.id ? 'btn-warning text-dark px-3' : 'bg-black text-secondary border border-secondary border-opacity-25 px-2'">
               {{ range.label }}
             </button>
           </div>
@@ -92,11 +95,11 @@
       </div>
     </div>
 
-    <!-- LOG AKTIVITAS KEHADIRAN (MENGGUNAKAN GLOBAL FILTER) -->
-    <div class="px-2">
-      <!-- Filter Waktu Global untuk Log Kehadiran -->
+    <!-- LOG AKTIVITAS KEHADIRAN -->
+    <!-- PERBAIKAN: Hapus px-2 -->
+    <div>
       <div class="d-flex gap-2 overflow-auto mb-3 pb-1" style="scrollbar-width: none;">
-        <button v-for="range in rangeOptions" :key="`gl-${range.id}`" @click="globalRange = range.id" class="btn rounded-pill fw-bold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;" :class="globalRange === range.id ? 'btn-primary text-dark px-3' : 'btn-dark border border-secondary border-opacity-25 text-secondary px-3'">
+        <button v-for="range in rangeOptions" :key="`gl-${range.id}`" @click="globalRange = range.id" class="btn rounded-pill fw-bold text-uppercase text-nowrap" style="font-size: 0.75rem; letter-spacing: 0.5px;" :class="globalRange === range.id ? 'btn-primary text-dark px-3' : 'btn-dark border border-secondary border-opacity-25 text-secondary px-3'">
           {{ range.label }}
         </button>
       </div>

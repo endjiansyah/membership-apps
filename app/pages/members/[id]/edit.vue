@@ -127,7 +127,9 @@ const memberId = route.params.id
 const isLoading = ref(false)
 const fileInput = ref(null)
 const photoPreview = ref(null)
-let selectedFile = null // Menyimpan file mentah yang dikompres untuk FormData
+
+// PERBAIKAN: Gunakan ref() agar data file aman terekam ke FormData
+const selectedFile = ref(null) 
 
 const form = ref({
   name: '',
@@ -136,11 +138,9 @@ const form = ref({
   dynamicData: {}
 })
 
-// Ambil data master fields dan data member saat ini
 const { data: fields } = await useFetch('/api/fields', { server: false })
 const { data: memberData, pending } = await useFetch(`/api/members/${memberId}`, { server: false })
 
-// Inisialisasi form dengan data member yang ada
 if (memberData.value) {
   form.value.name = memberData.value.name || ''
   form.value.phoneNumber = memberData.value.phoneNumber || ''
@@ -160,7 +160,6 @@ const triggerFileInput = () => {
   if (fileInput.value) fileInput.value.click()
 }
 
-// Fungsi kompresi gambar otomatis via Canvas sebelum masuk ke FormData
 const handlePhotoUpload = (event) => {
   const file = event.target.files[0]
   if (file) {
@@ -184,11 +183,11 @@ const handlePhotoUpload = (event) => {
         const ctx = canvas.getContext('2d')
         ctx.drawImage(img, 0, 0, width, height)
 
-        // Konversi hasil canvas ke Blob (File) agar bisa dikirim via FormData
         canvas.toBlob((blob) => {
           if (blob) {
-            selectedFile = new File([blob], file.name || 'photo.jpg', { type: 'image/jpeg' })
-            photoPreview.value = canvas.toDataURL('image/jpeg', 0.7) // Tampilkan preview instan
+            // Simpan ke variable ref
+            selectedFile.value = new File([blob], file.name || 'photo.jpg', { type: 'image/jpeg' })
+            photoPreview.value = canvas.toDataURL('image/jpeg', 0.7) 
           }
         }, 'image/jpeg', 0.7)
       }
@@ -206,9 +205,9 @@ const updateMember = async () => {
     formData.append('phoneNumber', form.value.phoneNumber || '')
     formData.append('email', form.value.email || '')
     
-    // Lampirkan file foto hanya jika user memilih foto baru
-    if (selectedFile) {
-      formData.append('photo', selectedFile)
+    // PERBAIKAN: Tarik dari variable ref (.value)
+    if (selectedFile.value) {
+      formData.append('photo', selectedFile.value)
     }
     
     formData.append('dynamicData', JSON.stringify(form.value.dynamicData))

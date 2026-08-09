@@ -1,19 +1,21 @@
 <template>
-  <div class="container-fluid px-1 px-md-3 py-2 py-md-3 pb-5 mb-5" style="max-width: 800px;">
+  <!-- PERBAIKAN 1: Hapus container-fluid dan px-*, gunakan mx-auto agar rata tengah -->
+  <div class="py-2 py-md-3 pb-5 mb-5 mx-auto" style="max-width: 800px;">
     
     <!-- HEADER DENGAN TOMBOL KEMBALI -->
-    <div class="d-flex align-items-center gap-3 mb-4 px-2 mt-2">
+    <!-- PERBAIKAN 2: Hapus px-2 -->
+    <div class="d-flex align-items-center gap-3 mb-4 mt-2">
       <NuxtLink to="/" class="btn btn-dark border border-secondary border-opacity-50 rounded-circle d-flex justify-content-center align-items-center text-white shadow-sm" style="width: 38px; height: 38px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-          <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
-        </svg>
+        <!-- Menggunakan modul Icon yang baru diinstal -->
+        <Icon name="bi:arrow-left" class="fs-5" />
       </NuxtLink>
       <h4 class="mb-0 fw-bold text-white">Histori Sistem</h4>
     </div>
 
     <!-- FILTER WAKTU -->
-    <div class="card bg-dark border border-secondary border-opacity-25 rounded-4 shadow-sm mb-3 mx-2">
-      <div class="card-body p-3">
+    <!-- PERBAIKAN 3: Hapus mx-2 pada card -->
+    <div class="card bg-dark border border-secondary border-opacity-25 rounded-4 shadow-sm mb-3">
+      <div class="card-body p-3 p-md-4">
         <h6 class="fw-bold text-secondary mb-3" style="font-size: 0.8rem;">PENGATURAN FILTER WAKTU</h6>
         <div class="row g-2 mb-3">
           <div class="col-6">
@@ -37,8 +39,9 @@
     </div>
 
     <!-- STATUS INDIKATOR -->
-    <div class="px-3 mb-3">
-      <div class="p-2 bg-black bg-opacity-50 rounded-3 border border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+    <!-- PERBAIKAN 4: Hapus px-3 -->
+    <div class="mb-3">
+      <div class="p-2 p-md-3 bg-black bg-opacity-50 rounded-3 border border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
         <small class="text-info fw-bold" style="font-size: 0.75rem;">
           <span v-if="activeFilter.isFiltered">
             📅 {{ formatDateOnly(activeFilter.startDate) }} s/d {{ formatDateOnly(activeFilter.endDate) }}
@@ -49,8 +52,9 @@
       </div>
     </div>
 
-    <!-- DAFTAR LOG (Desain Diadaptasi dari Detail Member) -->
-    <div class="px-2">
+    <!-- DAFTAR LOG -->
+    <!-- PERBAIKAN 5: Hapus px-2 -->
+    <div>
       <div v-if="pending" class="text-center py-4">
         <div class="spinner-border text-primary" role="status"></div>
       </div>
@@ -60,7 +64,6 @@
       </div>
 
       <div v-else class="d-flex flex-column gap-2 mb-4">
-        
         <div v-for="log in logs" :key="log.id" class="card bg-dark border border-secondary border-opacity-25 rounded-4 p-3 shadow-sm">
           
           <div class="d-flex justify-content-between align-items-start mb-2">
@@ -85,8 +88,7 @@
               Oleh: <span class="text-white fw-bold">{{ log.actorName }}</span>
             </p>
 
-            <!-- TOMBOL & DETAIL PERUBAHAN (Hanya muncul jika log memiliki details berupa JSON) -->
-            <!-- Catatan: Karena kita menarik data dari 2 tabel, pastikan field details dipetakan dari backend -->
+            <!-- TOMBOL & DETAIL PERUBAHAN -->
             <div v-if="log.type === 'AUDIT' && isJson(log.details)" class="mt-2">
               <button @click="toggleAudit(log.id)" class="btn btn-sm btn-dark border border-secondary border-opacity-25 rounded text-secondary" style="font-size: 0.7rem; padding: 2px 8px;">
                 {{ expandedAuditId === log.id ? 'Sembunyikan Detail' : 'Lihat Detail Perubahan' }}
@@ -106,11 +108,11 @@
           </div>
           
         </div>
-
       </div>
 
       <!-- PAGINATION KONTROL -->
-      <div v-if="totalPages > 1" class="d-flex justify-content-between align-items-center px-2 mb-4">
+      <!-- PERBAIKAN 6: Hapus px-2 -->
+      <div v-if="totalPages > 1" class="d-flex justify-content-between align-items-center mb-4">
         <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1" class="btn btn-sm btn-dark border border-secondary border-opacity-50 rounded-pill px-3 text-white fw-bold" style="font-size: 0.75rem;">
           &laquo; Prev
         </button>
@@ -158,7 +160,6 @@ const toggleAudit = (id) => {
   expandedAuditId.value = expandedAuditId.value === id ? null : id
 }
 
-// Helper persis dari detail member
 const isJson = (str) => {
   if (!str) return false
   try { 

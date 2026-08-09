@@ -91,7 +91,6 @@
 
       <!-- TOMBOL SIMPAN -->
       <div>
-        <!-- Tambahan: style="font-size: 0.8rem;" -->
         <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-pill shadow-sm text-dark" style="font-size: 0.8rem;" :disabled="isLoading">
           {{ isLoading ? 'Menyimpan...' : 'Simpan Member' }}
         </button>
@@ -110,7 +109,7 @@ const isLoading = ref(false)
 const photoPreview = ref(null)
 const fileInput = ref(null)
 
-// KUNCI: Kita siapkan state khusus untuk menampung FILE ASLI (Binary)
+// KUNCI: Kita siapkan state khusus untuk menampung FILE YANG SUDAH DIKOMPRES
 const selectedFile = ref(null) 
 
 const form = ref({
@@ -120,24 +119,44 @@ const form = ref({
   dynamicData: {} 
 })
 
-// Fungsi klik buatan untuk memicu input file yang tersembunyi
 const triggerFileInput = () => {
-  if (fileInput.value) {
-    fileInput.value.click()
-  }
+  if (fileInput.value) fileInput.value.click()
 }
 
-// Fungsi ini MURNI HANYA UNTUK MEMBUAT PREVIEW GAMBAR
-// (Kompresinya biarkan Backend/Sharp yang mengurus agar hasilnya lebih optimal)
+// PERBAIKAN: Fungsi kompresi gambar otomatis via Canvas (Sama persis seperti di edit.vue)
 const handlePhotoUpload = (event) => {
   const file = event.target.files[0]
   if (file) {
-    selectedFile.value = file // SIMPAN FILE ASLI KE VARIABEL INI
-
-    // Buat URL sementara HANYA UNTUK PREVIEW di browser
     const reader = new FileReader()
     reader.onload = (e) => {
-      photoPreview.value = e.target.result 
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
+
+        // Batas maksimal lebar foto (800px sudah sangat cukup untuk pasfoto)
+        const MAX_WIDTH = 800
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width)
+          width = MAX_WIDTH
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+
+        // Konversi ke format JPEG dengan kualitas 70% agar ukurannya kecil
+        canvas.toBlob((blob) => {
+          if (blob) {
+            selectedFile.value = new File([blob], file.name || 'photo.jpg', { type: 'image/jpeg' })
+            photoPreview.value = canvas.toDataURL('image/jpeg', 0.7)
+          }
+        }, 'image/jpeg', 0.7)
+      }
+      img.src = e.target.result
     }
     reader.readAsDataURL(file)
   }
@@ -155,7 +174,7 @@ const saveMember = async () => {
     formData.append('email', form.value.email)
     formData.append('dynamicData', JSON.stringify(form.value.dynamicData))
     
-    // Masukkan FILE FISIK, bukan base64 preview-nya
+    // Masukkan FILE FISIK YANG SUDAH DIKOMPRES
     if (selectedFile.value) {
       formData.append('photo', selectedFile.value)
     }
