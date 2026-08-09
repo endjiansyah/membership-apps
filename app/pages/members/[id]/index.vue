@@ -1,13 +1,14 @@
 <template>
-  <div class="container-fluid px-0 py-1 py-md-3 pb-5 mb-5" style="max-width: 600px;">
+  <!-- PERBAIKAN 1: Hapus container-fluid dan px-0 yang bentrok, gunakan mx-auto px-2 agar pas di mobile -->
+  <div class="py-2 py-md-3 pb-5 mb-5 mx-auto px-2 px-md-0" style="max-width: 600px;">
     
-
     <div v-if="pending" class="text-center py-5">
       <div class="spinner-border text-primary" role="status"></div>
       <p class="text-secondary mt-3 small">Memuat data member...</p>
     </div>
 
-    <div v-else-if="member" class="px-3">
+    <!-- PERBAIKAN 2: Hapus class="px-3" yang bersarang di sini -->
+    <div v-else-if="member">
       
       <!-- AREA AVATAR & HEADER PROFIL -->
       <div class="text-center mb-4">
@@ -33,15 +34,13 @@
       </div>
 
       <!-- AREA AKSI UTAMA -->
-      <div class="mb-3 px-1">
-        <!-- Tombol Download QR -->
-        <!-- Tambahan: style="font-size: 0.8rem;" -->
+      <!-- PERBAIKAN 3: Hapus class="px-1" di sini -->
+      <div class="mb-3">
         <button @click="showQR" class="btn btn-outline-info w-100 fw-bold rounded-pill py-2 mb-2 border-info border-opacity-50" style="font-size: 0.8rem;">
           Download QR
         </button>
         
         <div class="d-flex gap-2 mb-2">
-          <!-- Tambahan: Ganti font-size yang lama menjadi 0.8rem -->
           <button @click="manualCheckIn" class="btn btn-primary w-100 fw-bold rounded-pill py-2 text-dark shadow-sm" style="font-size: 0.8rem;" :disabled="isProcessing">
             Hadir Manual
           </button>
@@ -51,7 +50,6 @@
         </div>
 
         <!-- Tombol Hapus -->
-        <!-- Tambahan: Ganti font-size yang lama menjadi 0.8rem -->
         <button v-if="!member.isActive" @click="deleteMember" class="btn btn-outline-danger w-100 fw-bold rounded-pill py-2 mt-1 border-danger border-opacity-50" style="font-size: 0.8rem;" :disabled="isProcessing">
           Hapus Permanen
         </button>
@@ -102,7 +100,6 @@
             <small class="text-secondary d-block mb-1" style="font-size: 0.75rem;">Phone Number</small>
             <span class="fw-bold text-white">{{ member.phoneNumber || '-' }}</span>
           </div>
-          <!-- Rendering Dynamic Data -->
           <template v-if="member.dynamicData">
             <div v-for="(value, key, index) in parseDynamicData(member.dynamicData)" :key="key" class="p-3" :class="{ 'border-bottom border-secondary border-opacity-25': index !== Object.keys(parseDynamicData(member.dynamicData)).length - 1 }">
               <small class="text-secondary d-block mb-1" style="font-size: 0.75rem;">{{ getFieldLabel(key) }}</small>
@@ -136,7 +133,6 @@
             </button>
           </div>
           
-          <!-- Custom Date Range Picker -->
           <div v-if="timeFilter === 'custom'" class="d-flex gap-2 mt-2 p-2 bg-dark rounded-3 border border-secondary border-opacity-25">
             <input type="date" v-model="customStart" class="form-control form-control-sm bg-black text-white border-secondary border-opacity-25">
             <span class="text-secondary align-self-center small">-</span>
@@ -144,106 +140,121 @@
           </div>
         </div>
 
-        <!-- LIST: ATTENDANCE LOGS -->
+        <!-- LIST: ATTENDANCE LOGS (Dengan Pagination Baru) -->
         <div v-if="activeTab === 'kehadiran'" class="d-flex flex-column gap-2">
           <div v-if="filteredAttendance.length === 0" class="text-center py-4 border border-secondary border-opacity-25 rounded-4 bg-dark shadow-sm">
             <p class="text-secondary mb-0 small">Tidak ada riwayat kehadiran pada periode ini.</p>
           </div>
           
-          <div v-for="log in filteredAttendance" :key="log.id" class="card bg-dark border border-secondary border-opacity-25 rounded-4 p-3 shadow-sm">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <div class="d-flex align-items-center gap-2">
-                <div class="rounded-circle flex-shrink-0" :class="log.entryMethod === 'QR_SCAN' ? 'bg-success' : 'bg-primary'" style="width: 8px; height: 8px;"></div>
-                <h6 class="mb-0 fw-bold text-white" style="font-size: 0.85rem;">
-                  {{ new Date(log.scannedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) }}
-                </h6>
+          <template v-else>
+            <!-- Gunakan paginatedAttendance, bukan filteredAttendance -->
+            <div v-for="log in paginatedAttendance" :key="log.id" class="card bg-dark border border-secondary border-opacity-25 rounded-4 p-3 shadow-sm">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="rounded-circle flex-shrink-0" :class="log.entryMethod === 'QR_SCAN' ? 'bg-success' : 'bg-primary'" style="width: 8px; height: 8px;"></div>
+                  <h6 class="mb-0 fw-bold text-white" style="font-size: 0.85rem;">
+                    {{ new Date(log.scannedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) }}
+                  </h6>
+                </div>
+                <span class="text-secondary font-monospace small">{{ new Date(log.scannedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }} WIB</span>
               </div>
-              <span class="text-secondary font-monospace small">{{ new Date(log.scannedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }} WIB</span>
+              <div class="ps-3 border-start border-secondary border-opacity-25 ms-1">
+                <p class="mb-1 text-secondary" style="font-size: 0.75rem;">
+                  Metode: <span class="text-white fw-bold">{{ log.entryMethod === 'QR_SCAN' ? 'QR Scanner' : 'Input Manual' }}</span>
+                </p>
+                <p class="mb-0 text-secondary" style="font-size: 0.75rem;">
+                  Petugas: <span class="text-white fw-bold">{{ log.scannedBy?.name || `ID #${log.scannedById}` }}</span>
+                </p>
+              </div>
             </div>
-            <div class="ps-3 border-start border-secondary border-opacity-25 ms-1">
-              <p class="mb-1 text-secondary" style="font-size: 0.75rem;">
-                Metode: <span class="text-white fw-bold">{{ log.entryMethod === 'QR_SCAN' ? 'QR Scanner' : 'Input Manual' }}</span>
-              </p>
-              <p class="mb-0 text-secondary" style="font-size: 0.75rem;">
-                Petugas: <span class="text-white fw-bold">{{ log.scannedBy?.name || `ID #${log.scannedById}` }}</span>
-              </p>
+
+            <!-- Kontrol Pagination Kehadiran -->
+            <div v-if="totalAttPages > 1" class="d-flex justify-content-between align-items-center mt-2">
+              <button @click="prevAttPage" :disabled="currentAttPage === 1" class="btn btn-sm btn-dark border border-secondary border-opacity-50 rounded-pill px-3 text-white fw-bold" style="font-size: 0.7rem;">
+                &laquo; Prev
+              </button>
+              <span class="text-secondary fw-bold" style="font-size: 0.75rem;">
+                Hal {{ currentAttPage }} / {{ totalAttPages }}
+              </span>
+              <button @click="nextAttPage" :disabled="currentAttPage === totalAttPages" class="btn btn-sm btn-dark border border-secondary border-opacity-50 rounded-pill px-3 text-white fw-bold" style="font-size: 0.7rem;">
+                Next &raquo;
+              </button>
             </div>
-          </div>
+          </template>
         </div>
 
-        <!-- LIST: AUDIT LOGS -->
+        <!-- LIST: AUDIT LOGS (Dengan Pagination Baru) -->
         <div v-if="activeTab === 'aktivitas'" class="d-flex flex-column gap-2">
           <div v-if="filteredAudit.length === 0" class="text-center py-4 border border-secondary border-opacity-25 rounded-4 bg-dark shadow-sm">
             <p class="text-secondary mb-0 small">Tidak ada riwayat administratif pada periode ini.</p>
           </div>
           
-          <div v-for="audit in filteredAudit" :key="audit.id" class="card bg-dark border border-secondary border-opacity-25 rounded-4 p-3 shadow-sm">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <h6 class="mb-0 fw-bold text-white" style="font-size: 0.85rem;">{{ formatAuditAction(audit.action) }}</h6>
-              <span class="text-secondary font-monospace small">{{ new Date(audit.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) }}</span>
-            </div>
-            <div class="ps-3 border-start border-secondary border-opacity-25 ms-1">
-              <p class="mb-1 text-secondary" style="font-size: 0.75rem;">
-                Sumber: <span class="text-white">{{ audit.source }}</span>
-              </p>
-              <p class="mb-0 text-secondary" style="font-size: 0.75rem;">
-                Dieksekusi oleh: <span class="text-white fw-bold">{{ audit.user?.name || `Petugas #${audit.performedBy}` }}</span>
-              </p>
+          <template v-else>
+            <!-- Gunakan paginatedAudit, bukan filteredAudit -->
+            <div v-for="audit in paginatedAudit" :key="audit.id" class="card bg-dark border border-secondary border-opacity-25 rounded-4 p-3 shadow-sm">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h6 class="mb-0 fw-bold text-white" style="font-size: 0.85rem;">{{ formatAuditAction(audit.action) }}</h6>
+                <span class="text-secondary font-monospace small">{{ new Date(audit.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) }}</span>
+              </div>
+              <div class="ps-3 border-start border-secondary border-opacity-25 ms-1">
+                <p class="mb-1 text-secondary" style="font-size: 0.75rem;">
+                  Sumber: <span class="text-white">{{ audit.source }}</span>
+                </p>
+                <p class="mb-0 text-secondary" style="font-size: 0.75rem;">
+                  Dieksekusi oleh: <span class="text-white fw-bold">{{ audit.user?.name || `Petugas #${audit.performedBy}` }}</span>
+                </p>
 
-              <!-- TOMBOL & DETAIL PERUBAHAN -->
-              <div v-if="isJson(audit.details)" class="mt-2">
-                <button @click="toggleAudit(audit.id)" class="btn btn-sm btn-dark border border-secondary border-opacity-25 rounded text-secondary" style="font-size: 0.7rem; padding: 2px 8px;">
-                  {{ expandedAuditId === audit.id ? 'Sembunyikan Detail' : 'Lihat Detail Perubahan' }}
-                </button>
-                
-                <!-- Box Rincian Perubahan -->
-                <div v-if="expandedAuditId === audit.id" class="mt-2 bg-black bg-opacity-50 p-2 rounded-3 border border-secondary border-opacity-25">
-                  <div v-for="(change, idx) in parseDetails(audit.details)" :key="idx" class="mb-1">
-                    <span class="text-secondary d-block fw-bold" style="font-size: 0.65rem;">{{ change.field }}</span>
-                    <div class="d-flex align-items-center gap-2" style="font-size: 0.75rem;">
-                      <span class="text-danger text-decoration-line-through text-truncate" style="max-width: 40%;">{{ change.old }}</span>
-                      <span class="text-secondary">→</span>
-                      <span class="text-success text-truncate" style="max-width: 40%;">{{ change.new }}</span>
+                <div v-if="isJson(audit.details)" class="mt-2">
+                  <button @click="toggleAudit(audit.id)" class="btn btn-sm btn-dark border border-secondary border-opacity-25 rounded text-secondary" style="font-size: 0.7rem; padding: 2px 8px;">
+                    {{ expandedAuditId === audit.id ? 'Sembunyikan Detail' : 'Lihat Detail Perubahan' }}
+                  </button>
+                  
+                  <div v-if="expandedAuditId === audit.id" class="mt-2 bg-black bg-opacity-50 p-2 rounded-3 border border-secondary border-opacity-25">
+                    <div v-for="(change, idx) in parseDetails(audit.details)" :key="idx" class="mb-1">
+                      <span class="text-secondary d-block fw-bold" style="font-size: 0.65rem;">{{ change.field }}</span>
+                      <div class="d-flex align-items-center gap-2" style="font-size: 0.75rem;">
+                        <span class="text-danger text-decoration-line-through text-truncate" style="max-width: 40%;">{{ change.old }}</span>
+                        <span class="text-secondary">→</span>
+                        <span class="text-success text-truncate" style="max-width: 40%;">{{ change.new }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-
             </div>
-          </div>
+
+            <!-- Kontrol Pagination Audit -->
+            <div v-if="totalAuditPages > 1" class="d-flex justify-content-between align-items-center mt-2">
+              <button @click="prevAuditPage" :disabled="currentAuditPage === 1" class="btn btn-sm btn-dark border border-secondary border-opacity-50 rounded-pill px-3 text-white fw-bold" style="font-size: 0.7rem;">
+                &laquo; Prev
+              </button>
+              <span class="text-secondary fw-bold" style="font-size: 0.75rem;">
+                Hal {{ currentAuditPage }} / {{ totalAuditPages }}
+              </span>
+              <button @click="nextAuditPage" :disabled="currentAuditPage === totalAuditPages" class="btn btn-sm btn-dark border border-secondary border-opacity-50 rounded-pill px-3 text-white fw-bold" style="font-size: 0.7rem;">
+                Next &raquo;
+              </button>
+            </div>
+          </template>
         </div>
 
       </div>
-
     </div>
 
-    <!-- ========================================== -->
-    <!-- MODAL POPUP DOWNLOAD KARTU QR CODE         -->
-    <!-- ========================================== -->
+    <!-- MODAL POPUP DOWNLOAD KARTU QR CODE -->
     <div v-if="showQrModal" class="position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-75 d-flex justify-content-center align-items-center px-3" style="z-index: 1060;" @click.self="showQrModal = false">
-      <!-- PERBAIKAN 1: p-4 -> p-3, max-width diperkecil dikit -->
       <div class="card bg-dark border border-secondary border-opacity-50 rounded-4 p-3 text-center shadow-lg w-100" style="max-width: 320px;">
-        
-        <!-- PERBAIKAN 2: Judul mb-4 -> mb-3, font size dikecilkan -->
         <h6 class="fw-bold text-white mb-3" style="font-size: 1rem;">{{ member.name }}</h6>
-        
-        <!-- PERBAIKAN 3: mb-4 -> mb-3, ukuran QR responsif dikit -->
         <div class="bg-white p-2 rounded-4 mb-3 d-inline-block mx-auto shadow-sm">
           <img v-if="qrImageUrl" :src="qrImageUrl" alt="QR Code Member" class="rounded-3" style="width: 180px; height: 180px; display: block;" />
           <div v-else class="spinner-border text-primary my-4" role="status"></div>
         </div>
-
-        <!-- PERBAIKAN 4: mb-4 -> mb-3, font size dikecilkan -->
         <p class="small mb-3 font-monospace text-secondary bg-black p-2 rounded-3" style="font-size: 0.7rem; word-break: break-all;">
           ID: {{ member.uuid }}
         </p>
-
-        <!-- PERBAIKAN 5: py-3 -> py-2, font size disesuaikan, teks disingkat -->
         <button v-if="qrImageUrl" @click="downloadCard" class="btn btn-primary w-100 rounded-pill fw-bold mb-2 shadow py-2 text-dark" style="font-size: 0.8rem;" :disabled="isDownloading">
           {{ isDownloading ? 'Memproses...' : 'Download Kartu' }}
         </button>
-        
-        <!-- PERBAIKAN 6: py-3 -> py-2, teks disingkat -->
         <button class="btn btn-outline-secondary w-100 rounded-pill fw-bold py-2 mt-1 text-white" style="font-size: 0.8rem;" @click="showQrModal = false">
           Tutup
         </button>
@@ -253,10 +264,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import QRCode from 'qrcode'
-
 
 const route = useRoute()
 const memberId = route.params.id
@@ -265,7 +275,6 @@ const activeTab = ref('kehadiran')
 const isProcessing = ref(false)
 const expandedAuditId = ref(null)
 
-// State Filter Waktu
 const timeFilter = ref('all')
 const customStart = ref('')
 const customEnd = ref('')
@@ -278,7 +287,6 @@ const filterOptions = [
 ]
 
 const { data: member, pending, refresh } = await useFetch(`/api/members/${memberId}`, { server: false })
-
 const { data: fields } = await useFetch('/api/fields', { server: false })
 
 const getFieldLabel = (key) => {
@@ -355,6 +363,39 @@ const filteredAudit = computed(() => {
   return member.value.auditLogs.filter(audit => isWithinDateRange(audit.createdAt)).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 })
 
+// ==========================================
+// LOGIKA PAGINATION FRONTEND UNTUK RIWAYAT
+// ==========================================
+const currentAttPage = ref(1)
+const currentAuditPage = ref(1)
+const itemsPerPage = 10 // Tampilkan 10 riwayat per halaman agar tidak terlalu panjang
+
+// Reset ke halaman 1 jika filter waktu atau tab diubah
+watch([timeFilter, customStart, customEnd, activeTab], () => {
+  currentAttPage.value = 1
+  currentAuditPage.value = 1
+})
+
+// Pagination Kehadiran
+const totalAttPages = computed(() => Math.ceil(filteredAttendance.value.length / itemsPerPage) || 1)
+const paginatedAttendance = computed(() => {
+  const start = (currentAttPage.value - 1) * itemsPerPage
+  return filteredAttendance.value.slice(start, start + itemsPerPage)
+})
+const prevAttPage = () => { if (currentAttPage.value > 1) currentAttPage.value-- }
+const nextAttPage = () => { if (currentAttPage.value < totalAttPages.value) currentAttPage.value++ }
+
+// Pagination Audit
+const totalAuditPages = computed(() => Math.ceil(filteredAudit.value.length / itemsPerPage) || 1)
+const paginatedAudit = computed(() => {
+  const start = (currentAuditPage.value - 1) * itemsPerPage
+  return filteredAudit.value.slice(start, start + itemsPerPage)
+})
+const prevAuditPage = () => { if (currentAuditPage.value > 1) currentAuditPage.value-- }
+const nextAuditPage = () => { if (currentAuditPage.value < totalAuditPages.value) currentAuditPage.value++ }
+// ==========================================
+
+
 const stats = computed(() => {
   const logs = member.value?.logs || []
   const now = new Date()
@@ -420,7 +461,6 @@ const toggleStatus = async () => {
 }
 
 const deleteMember = async () => {
-  // Konfirmasi ganda untuk mencegah salah klik
   if (!confirm('PERINGATAN: Anda yakin ingin menghapus member ini beserta seluruh riwayat kehadirannya? Tindakan ini tidak dapat dibatalkan.')) return
   
   isProcessing.value = true
@@ -430,51 +470,17 @@ const deleteMember = async () => {
     })
     
     alert('Member berhasil dihapus secara permanen.')
-    navigateTo('/members') // Otomatis lemparkan pengguna kembali ke halaman List Member
+    navigateTo('/members') 
   } catch (error) {
     alert(error.data?.statusMessage || 'Gagal menghapus member.')
-    isProcessing.value = false // Hanya matikan loading jika gagal, jika sukses biarkan loading karena akan pindah halaman
+    isProcessing.value = false 
   }
 }
 
-const downloadQR = async () => {
-  if (!member.value?.uuid) {
-    return alert('Data UUID tidak ditemukan.')
-  }
-  
-  isProcessing.value = true
-  try {
-    // Memanfaatkan public API untuk generate QR dengan UUID member
-    // (Bisa disesuaikan jika Anda memakai library lokal di halaman List)
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${member.value.uuid}`
-    
-    // Fetch blob agar memicu file download, bukan open-in-new-tab
-    const response = await fetch(qrUrl)
-    const blob = await response.blob()
-    const url = window.URL.createObjectURL(blob)
-    
-    const link = document.createElement('a')
-    link.href = url
-    // Format nama file: QR-NamaMember-12345.png
-    link.download = `QR-${member.value.name.replace(/\s+/g, '-')}-${member.value.id}.png`
-    
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-  } catch (error) {
-    alert('Terjadi kesalahan saat mengunduh QR Code.')
-  } finally {
-    isProcessing.value = false
-  }
-}
-
-// STATE BARU UNTUK KARTU QR
 const showQrModal = ref(false)
 const qrImageUrl = ref('')
 const isDownloading = ref(false)
 
-// FUNGSI MEMBUKA MODAL DAN GENERATE QR
 const showQR = async () => {
   if (!member.value?.uuid) return alert('Data UUID tidak ditemukan.')
   
@@ -487,7 +493,6 @@ const showQR = async () => {
   }
 }
 
-// FUNGSI MENGGAMBAR KARTU DAN MENDOWNLOAD (Persis dengan halaman List)
 const downloadCard = async () => {
   if (!member.value || !qrImageUrl.value) return
   isDownloading.value = true
