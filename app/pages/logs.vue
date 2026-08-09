@@ -3,14 +3,14 @@
     
     <!-- HEADER -->
     <div class="d-flex align-items-center mb-3 px-2">
-      <h4 class="mb-0 fw-bold text-white">Log & Histori Aktivitas</h4>
+      <h4 class="mb-0 fw-bold text-white">Histori Sistem</h4>
     </div>
 
-    <!-- FILTER WAKTU (Gaya Aplikasi Bank) -->
-    <div class="card bg-dark border border-secondary border-opacity-25 rounded-4 shadow-sm mb-4 mx-2">
+    <!-- FILTER WAKTU -->
+    <div class="card bg-dark border border-secondary border-opacity-25 rounded-4 shadow-sm mb-3 mx-2">
       <div class="card-body p-3">
-        <h6 class="fw-bold text-secondary mb-3" style="font-size: 0.8rem;">FILTER WAKTU</h6>
-        <div class="row g-2">
+        <h6 class="fw-bold text-secondary mb-3" style="font-size: 0.8rem;">PENGATURAN FILTER WAKTU</h6>
+        <div class="row g-2 mb-3">
           <div class="col-6">
             <label class="form-label text-secondary small mb-1" style="font-size: 0.7rem;">Dari Tanggal</label>
             <input type="date" v-model="filters.startDate" class="form-control form-control-sm bg-black text-white border-secondary border-opacity-25 rounded-3 py-2" style="font-size: 0.8rem;">
@@ -20,96 +20,170 @@
             <input type="date" v-model="filters.endDate" class="form-control form-control-sm bg-black text-white border-secondary border-opacity-25 rounded-3 py-2" style="font-size: 0.8rem;">
           </div>
         </div>
-        <button @click="fetchLogs" class="btn btn-primary w-100 rounded-pill fw-bold py-2 mt-3 text-dark shadow-sm" style="font-size: 0.8rem;" :disabled="pending">
-          {{ pending ? 'Memuat Histori...' : 'Terapkan Filter' }}
-        </button>
+        <div class="d-flex gap-2">
+          <button @click="resetFilter" class="btn btn-outline-secondary w-50 rounded-pill fw-bold py-2 text-white border-secondary border-opacity-50" style="font-size: 0.8rem;" :disabled="pending">
+            Tampilkan Semua
+          </button>
+          <button @click="applyFilter" class="btn btn-primary w-50 rounded-pill fw-bold py-2 text-dark shadow-sm" style="font-size: 0.8rem;" :disabled="pending">
+            Terapkan Filter
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- DAFTAR LOG (Timeline) -->
+    <!-- STATUS INDIKATOR -->
+    <div class="px-3 mb-3">
+      <div class="p-2 bg-black bg-opacity-50 rounded-3 border border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+        <small class="text-info fw-bold" style="font-size: 0.75rem;">
+          <span v-if="activeFilter.isFiltered">
+            📅 {{ formatDateOnly(activeFilter.startDate) }} s/d {{ formatDateOnly(activeFilter.endDate) }}
+          </span>
+          <span v-else>🌍 Menampilkan: Semua Histori</span>
+        </small>
+        <small class="text-secondary" style="font-size: 0.75rem;">Total: {{ totalData }} catatan</small>
+      </div>
+    </div>
+
+    <!-- DAFTAR LOG (Desain Diadaptasi dari Detail Member) -->
     <div class="px-2">
       <div v-if="pending" class="text-center py-4">
         <div class="spinner-border text-primary" role="status"></div>
       </div>
       
-      <div v-else-if="!logs || logs.length === 0" class="text-center py-5 bg-dark rounded-4 border border-secondary border-opacity-25">
-        <p class="text-secondary small mb-0">Tidak ada histori aktivitas pada periode ini.</p>
+      <div v-else-if="!logs || logs.length === 0" class="text-center py-4 border border-secondary border-opacity-25 rounded-4 bg-dark shadow-sm">
+        <p class="text-secondary mb-0 small">Tidak ada histori aktivitas ditemukan pada periode ini.</p>
       </div>
 
-      <div v-else class="card bg-dark border border-secondary border-opacity-25 rounded-4 shadow-sm overflow-hidden">
-        <div class="list-group list-group-flush">
+      <div v-else class="d-flex flex-column gap-2 mb-4">
+        
+        <div v-for="log in logs" :key="log.id" class="card bg-dark border border-secondary border-opacity-25 rounded-4 p-3 shadow-sm">
           
-          <div v-for="log in logs" :key="log.id" class="list-group-item bg-transparent border-bottom border-secondary border-opacity-25 p-3">
-            
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <div>
-                <span class="badge rounded-pill mb-1" :class="getActionBadge(log.action).class" style="font-size: 0.65rem;">
-                  {{ getActionBadge(log.action).label }}
-                </span>
-                <h6 class="fw-bold text-white mb-0" style="font-size: 0.95rem;">
-                  {{ log.memberName }}
-                </h6>
-              </div>
-              <div class="text-end">
-                <small class="text-secondary d-block font-monospace" style="font-size: 0.7rem;">
-                  {{ formatDate(log.createdAt) }}
-                </small>
-                <small class="text-secondary font-monospace" style="font-size: 0.65rem;">
-                  {{ formatTime(log.createdAt) }} WIB
-                </small>
-              </div>
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h6 class="mb-0 fw-bold text-white" style="font-size: 0.85rem;">
+              {{ formatActionLabel(log.action) }}
+            </h6>
+            <div class="text-end">
+              <span class="text-secondary font-monospace small d-block" style="font-size: 0.7rem;">
+                {{ formatDateOnly(log.createdAt) }}
+              </span>
+              <span class="text-secondary font-monospace" style="font-size: 0.65rem;">
+                {{ formatTime(log.createdAt) }} WIB
+              </span>
             </div>
-
-            <!-- Identitas Pelaku (Aktor) -->
-            <div class="d-flex align-items-center mt-2 p-2 bg-black bg-opacity-50 rounded-3 border border-secondary border-opacity-10">
-              <div class="text-secondary me-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
-                  <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
-                </svg>
-              </div>
-              <small class="text-secondary" style="font-size: 0.7rem;">
-                Oleh: <span class="fw-bold text-white">{{ log.actorName }}</span>
-              </small>
-            </div>
-
           </div>
 
-        </div>
-      </div>
-    </div>
+          <div class="ps-3 border-start border-secondary border-opacity-25 ms-1">
+            <p class="mb-1 text-secondary" style="font-size: 0.75rem;">
+              Target: <span class="text-warning fw-bold">{{ log.memberName }}</span>
+            </p>
+            <p class="mb-0 text-secondary" style="font-size: 0.75rem;">
+              Oleh: <span class="text-white fw-bold">{{ log.actorName }}</span>
+            </p>
 
+            <!-- TOMBOL & DETAIL PERUBAHAN (Hanya muncul jika log memiliki details berupa JSON) -->
+            <!-- Catatan: Karena kita menarik data dari 2 tabel, pastikan field details dipetakan dari backend -->
+            <div v-if="log.type === 'AUDIT' && isJson(log.details)" class="mt-2">
+              <button @click="toggleAudit(log.id)" class="btn btn-sm btn-dark border border-secondary border-opacity-25 rounded text-secondary" style="font-size: 0.7rem; padding: 2px 8px;">
+                {{ expandedAuditId === log.id ? 'Sembunyikan Detail' : 'Lihat Detail Perubahan' }}
+              </button>
+              
+              <div v-if="expandedAuditId === log.id" class="mt-2 bg-black bg-opacity-50 p-2 rounded-3 border border-secondary border-opacity-25">
+                <div v-for="(change, idx) in parseDetails(log.details)" :key="idx" class="mb-1">
+                  <span class="text-secondary d-block fw-bold" style="font-size: 0.65rem;">{{ change.field }}</span>
+                  <div class="d-flex align-items-center gap-2" style="font-size: 0.75rem;">
+                    <span class="text-danger text-decoration-line-through text-truncate" style="max-width: 40%;">{{ change.old || '(kosong)' }}</span>
+                    <span class="text-secondary">→</span>
+                    <span class="text-success text-truncate" style="max-width: 40%;">{{ change.new || '(kosong)' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+
+      </div>
+
+      <!-- PAGINATION KONTROL -->
+      <div v-if="totalPages > 1" class="d-flex justify-content-between align-items-center px-2 mb-4">
+        <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1" class="btn btn-sm btn-dark border border-secondary border-opacity-50 rounded-pill px-3 text-white fw-bold" style="font-size: 0.75rem;">
+          &laquo; Prev
+        </button>
+        <span class="text-secondary fw-bold" style="font-size: 0.8rem;">
+          Halaman {{ currentPage }} dari {{ totalPages }}
+        </span>
+        <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages" class="btn btn-sm btn-dark border border-secondary border-opacity-50 rounded-pill px-3 text-white fw-bold" style="font-size: 0.75rem;">
+          Next &raquo;
+        </button>
+      </div>
+
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 
+const formatForInput = (date) => date.toISOString().split('T')[0]
 const today = new Date()
 const sevenDaysAgo = new Date(today)
 sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-
-const formatForInput = (date) => {
-  return date.toISOString().split('T')[0]
-}
 
 const filters = ref({
   startDate: formatForInput(sevenDaysAgo),
   endDate: formatForInput(today)
 })
 
+const activeFilter = ref({
+  isFiltered: false,
+  startDate: '',
+  endDate: ''
+})
+
 const logs = ref([])
 const pending = ref(false)
+const currentPage = ref(1)
+const totalPages = ref(1)
+const totalData = ref(0)
+const limit = 15 
 
-const fetchLogs = async () => {
+const expandedAuditId = ref(null)
+
+const toggleAudit = (id) => {
+  expandedAuditId.value = expandedAuditId.value === id ? null : id
+}
+
+// Helper persis dari detail member
+const isJson = (str) => {
+  if (!str) return false
+  try { 
+    const parsed = JSON.parse(str)
+    return Array.isArray(parsed)
+  } catch(e) { return false }
+}
+
+const parseDetails = (str) => {
+  try { return JSON.parse(str) } catch(e) { return [] }
+}
+
+const fetchLogs = async (page = 1) => {
   pending.value = true
   try {
-    const query = new URLSearchParams({
-      startDate: filters.value.startDate,
-      endDate: filters.value.endDate
-    }).toString()
+    const queryParams = { page, limit }
+    
+    if (activeFilter.value.isFiltered) {
+      queryParams.startDate = activeFilter.value.startDate
+      queryParams.endDate = activeFilter.value.endDate
+    }
 
-    logs.value = await $fetch(`/api/logs?${query}`)
+    const query = new URLSearchParams(queryParams).toString()
+    const response = await $fetch(`/api/logs?${query}`)
+    
+    logs.value = response.data
+    currentPage.value = response.meta.page
+    totalPages.value = response.meta.totalPages
+    totalData.value = response.meta.totalRecords
+
   } catch (error) {
     alert('Gagal mengambil data histori.')
   } finally {
@@ -117,13 +191,33 @@ const fetchLogs = async () => {
   }
 }
 
-onMounted(() => {
-  fetchLogs() 
-})
+const applyFilter = () => {
+  activeFilter.value = {
+    isFiltered: true,
+    startDate: filters.value.startDate,
+    endDate: filters.value.endDate
+  }
+  fetchLogs(1) 
+}
 
-const formatDate = (isoString) => {
-  if (!isoString) return ''
-  return new Date(isoString).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+const resetFilter = () => {
+  filters.value.startDate = ''
+  filters.value.endDate = ''
+  activeFilter.value = { isFiltered: false, startDate: '', endDate: '' }
+  fetchLogs(1)
+}
+
+const changePage = (newPage) => {
+  if (newPage >= 1 && newPage <= totalPages.value) {
+    fetchLogs(newPage)
+  }
+}
+
+onMounted(() => { fetchLogs(1) })
+
+const formatDateOnly = (dateStr) => {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 const formatTime = (isoString) => {
@@ -131,24 +225,20 @@ const formatTime = (isoString) => {
   return new Date(isoString).toLocaleTimeString('id-ID', { hour: '2-digit', minute:'2-digit' })
 }
 
-// Warna indikator badge diperkaya
-const getActionBadge = (action) => {
-  if (!action) return { label: 'LAINNYA', class: 'bg-secondary text-white' }
-  const act = action.toUpperCase()
-  
-  if (act.includes('CREATE')) return { label: 'DAFTAR BARU', class: 'bg-success text-white' }
-  if (act.includes('DELETE')) return { label: 'HAPUS PERMANEN', class: 'bg-danger text-white' }
-  if (act.includes('CHECK_IN') || act.includes('SCAN')) return { label: 'HADIR (CHECK-IN)', class: 'bg-primary text-dark' }
-  if (act.includes('UPDATE') || act.includes('EDIT')) return { label: 'PERUBAHAN DATA', class: 'bg-info text-dark' }
-  if (act.includes('ACTIVATE')) return { label: 'AKTIVASI', class: 'bg-warning text-dark' }
-  if (act.includes('DEACTIVATE')) return { label: 'NONAKTIF', class: 'bg-secondary border border-secondary text-secondary' }
-  
-  return { label: action, class: 'bg-secondary text-white' }
+const formatActionLabel = (action) => {
+  const actions = {
+    'AKTIVASI_STATUS': '✅ Aktivasi Membership',
+    'NONAKTIF_STATUS': '❌ Penonaktifan Membership',
+    'UPDATE_PROFIL': '📝 Pembaruan Data Profil',
+    'CREATE_MEMBER': '🆕 Pendaftaran Member Baru',
+    'DELETE_MEMBER': '🗑️ Penghapusan Permanen Member',
+    'CHECK_IN (QR)': '📸 Hadir (Scan QR Code)',
+    'CHECK_IN (MANUAL)': '✍️ Hadir (Input Manual)'
+  }
+  return actions[action] || action
 }
 </script>
 
 <style scoped>
-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-}
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
 </style>

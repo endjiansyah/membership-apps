@@ -1,6 +1,11 @@
 <script setup>
 import { ref, computed } from 'vue'
 
+// --- TAMBAHAN UNTUK MENDAPATKAN DATA USER LOGIN ---
+const { data: authData } = await useFetch('/api/auth/me', { server: false })
+const authUser = computed(() => authData.value?.user)
+// ----------------------------------------------------
+
 const selectedRange = ref('today')
 
 const { data: response, pending, refresh } = await useAsyncData('dashboard-stats', () => 
@@ -71,10 +76,21 @@ function formatTime(dateString) {
       </div>
     </div>
 
-    <!-- AKSI CEPAT SCANNER -->
-    <div class="px-2 mb-4">
-      <NuxtLink to="/scanner" class="btn btn-primary w-100 fw-bold py-3 rounded-4 text-dark shadow-sm d-flex align-items-center justify-content-center gap-2">
-        <i class="bi bi-camera-fill fs-5"></i> Buka Scanner
+<!-- AKSI CEPAT & NAVIGASI -->
+    <div class="px-2 mb-4 d-flex flex-column gap-3">
+      <!-- Tombol Utama: Scanner -->
+      <NuxtLink to="/scanner" class="btn btn-primary w-100 fw-bold py-2 rounded-4 text-dark shadow-sm d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-camera-fill fs-5"></i> <span>Buka Scanner</span>
+      </NuxtLink>
+      
+      <!-- Tombol Sekunder: Log (Hanya Super Admin) -->
+      <NuxtLink v-if="authUser?.role === 'SUPER_ADMIN'" to="/logs" class="btn btn-outline-info w-100 fw-bold py-2 rounded-4 border-opacity-25 shadow-sm d-flex align-items-center justify-content-center gap-2">
+        <!-- Ukuran SVG disamakan dengan fs-5 milik ikon kamera (sekitar 20px) -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM8.485 1.05a.5.5 0 0 1 .03.004c.164.032.316.078.455.138A.5.5 0 0 1 9.5 2v12a.5.5 0 0 1-.53.492c-.139-.06-.291-.106-.455-.138a.5.5 0 0 1-.53-.492V2a.5.5 0 0 1 .455-.938A.5.5 0 0 1 8.485 1.05z"/>
+          <path d="M4 4.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z"/>
+        </svg>
+        <span>Log Sistem</span>
       </NuxtLink>
     </div>
 
