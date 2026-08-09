@@ -1,9 +1,10 @@
 <template>
-  <!-- px-1 untuk mobile agar lebih lega, px-md-3 untuk desktop -->
-  <div class="container-fluid px-1 px-md-3 py-2 py-md-3 pb-5 mb-5" style="max-width: 600px;">
+  <!-- PERBAIKAN PADDING: Hapus container-fluid dan px-*, gunakan mx-auto -->
+  <div class="py-2 py-md-3 pb-5 mb-5 mx-auto" style="max-width: 600px;">
     
     <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-4 p-2">
+    <!-- Hapus p-2 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
         <h4 class="mb-0 fw-bold text-white">Members</h4>
       </div>
@@ -13,13 +14,12 @@
     </div>
 
     <!-- SEARCH & FILTER SECTION -->
-    <div class="px-2 mb-4">
+    <!-- Hapus px-2 -->
+    <div class="mb-4">
       <!-- Search Bar -->
       <div class="input-group mb-3 shadow-sm rounded-4 overflow-hidden">
-        <span class="input-group-text bg-dark border-secondary border-opacity-25 text-secondary border-end-0">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
-          </svg>
+        <span class="input-group-text bg-dark border-secondary border-opacity-25 border-end-0 d-flex align-items-center">
+          <Icon name="bi:search" class="text-secondary" />
         </span>
         <input 
           type="text" 
@@ -59,7 +59,8 @@
     </div>
 
     <!-- LIST MEMBER -->
-    <div class="px-2">
+    <!-- Hapus px-2 -->
+    <div>
       <!-- State: Loading -->
       <div v-if="pending" class="text-center py-5">
         <div class="spinner-border text-primary mb-3" role="status"></div>
@@ -72,36 +73,50 @@
       </div>
 
       <!-- State: Data Ready (Sesuai Layout Desain) -->
-      <div v-else class="d-flex flex-column gap-3">
-        <div 
-          v-for="member in filteredMembers" 
-          :key="member.id" 
-          class="card bg-dark border border-secondary border-opacity-25 p-3 rounded-4 shadow-sm"
-        >
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div class="pe-3">
-              <h5 class="mb-1 fw-bold text-white">{{ member.name }}</h5>
-              <p class="mb-0 text-secondary small font-monospace">
-                ID: {{ member.uuid?.slice(0,8) || 'N/A' }}
-              </p>
+      <div v-else>
+        <div class="d-flex flex-column gap-3">
+          <!-- PERBAIKAN: Gunakan paginatedMembers, bukan filteredMembers -->
+          <div 
+            v-for="member in paginatedMembers" 
+            :key="member.id" 
+            class="card bg-dark border border-secondary border-opacity-25 p-3 rounded-4 shadow-sm"
+          >
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="pe-3">
+                <h5 class="mb-1 fw-bold text-white">{{ member.name }}</h5>
+                <p class="mb-0 text-secondary small font-monospace">
+                  ID: {{ member.uuid?.slice(0,8) || 'N/A' }}
+                </p>
+              </div>
+              <!-- Status Text yang Tegas -->
+              <span class="small fw-bold tracking-wider" :class="member.isActive ? 'text-success' : 'text-secondary'">
+                {{ member.isActive ? 'ACTIVE' : 'INACTIVE' }}
+              </span>
             </div>
-            <!-- Status Text yang Tegas -->
-            <span class="small fw-bold tracking-wider" :class="member.isActive ? 'text-success' : 'text-secondary'">
-              {{ member.isActive ? 'ACTIVE' : 'INACTIVE' }}
-            </span>
+            
+            <!-- Tombol Aksi Bawah Kartu -->
+            <div class="d-flex gap-2">
+              <button @click.prevent="showQR(member)" class="btn btn-primary btn-sm rounded-pill fw-bold px-3 py-2 w-100" style="font-size: 0.75rem;">
+                QR
+              </button>
+              <NuxtLink :to="`/members/${member.id}`" class="btn btn-outline-secondary btn-sm rounded-pill fw-bold px-3 py-2 w-100 text-white" style="font-size: 0.75rem;">
+                Details
+              </NuxtLink>
+            </div>
           </div>
-          
+        </div>
 
-          <!-- Tombol Aksi Bawah Kartu -->
-          <div class="d-flex gap-2">
-            <!-- Tambahan: style="font-size: 0.75rem;" (Sedikit lebih kecil karena tombolnya kecil) -->
-            <button @click.prevent="showQR(member)" class="btn btn-primary btn-sm rounded-pill fw-bold px-3 py-2 w-100" style="font-size: 0.75rem;">
-              QR
-            </button>
-            <NuxtLink :to="`/members/${member.id}`" class="btn btn-outline-secondary btn-sm rounded-pill fw-bold px-3 py-2 w-100 text-white" style="font-size: 0.75rem;">
-              Details
-            </NuxtLink>
-          </div>
+        <!-- PAGINATION KONTROL -->
+        <div v-if="totalPages > 1" class="d-flex justify-content-between align-items-center mt-4">
+          <button @click="prevPage" :disabled="currentPage === 1" class="btn btn-sm btn-dark border border-secondary border-opacity-50 rounded-pill px-3 text-white fw-bold" style="font-size: 0.75rem;">
+            &laquo; Prev
+          </button>
+          <span class="text-secondary fw-bold" style="font-size: 0.8rem;">
+            Halaman {{ currentPage }} dari {{ totalPages }}
+          </span>
+          <button @click="nextPage" :disabled="currentPage === totalPages" class="btn btn-sm btn-dark border border-secondary border-opacity-50 rounded-pill px-3 text-white fw-bold" style="font-size: 0.75rem;">
+            Next &raquo;
+          </button>
         </div>
       </div>
     </div>
@@ -110,29 +125,23 @@
     <!-- MODAL POPUP DOWNLOAD KARTU QR CODE         -->
     <!-- ========================================== -->
     <div v-if="selectedMember" class="position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-75 d-flex justify-content-center align-items-center px-3" style="z-index: 1060;" @click.self="selectedMember = null">
-      <!-- PERBAIKAN 1: p-4 -> p-3, max-width diperkecil dikit -->
       <div class="card bg-dark border border-secondary border-opacity-50 rounded-4 p-3 text-center shadow-lg w-100" style="max-width: 320px;">
         
-        <!-- PERBAIKAN 2: Judul mb-4 -> mb-3, h4 -> h6, font size dikecilkan -->
         <h6 class="fw-bold text-white mb-3" style="font-size: 1rem;">{{ selectedMember.name }}</h6>
         
-        <!-- PERBAIKAN 3: mb-4 -> mb-3, ukuran QR responsif dikit -->
         <div class="bg-white p-2 rounded-4 mb-3 d-inline-block mx-auto shadow-sm">
           <img v-if="qrImageUrl" :src="qrImageUrl" alt="QR Code Member" class="rounded-3" style="width: 180px; height: 180px; display: block;" />
           <div v-else class="spinner-border text-primary my-4" role="status"></div>
         </div>
 
-        <!-- PERBAIKAN 4: mb-4 -> mb-3, font size dikecilkan -->
         <p class="small mb-3 font-monospace text-secondary bg-black p-2 rounded-3" style="font-size: 0.7rem; word-break: break-all;">
           ID: {{ selectedMember.uuid }}
         </p>
 
-        <!-- PERBAIKAN 5: py-3 -> py-2, font size disesuaikan, teks disingkat -->
         <button v-if="qrImageUrl" @click="downloadCard" class="btn btn-primary w-100 rounded-pill fw-bold mb-2 shadow py-2 text-dark" style="font-size: 0.8rem;" :disabled="isDownloading">
           {{ isDownloading ? 'Memproses...' : 'Download Kartu' }}
         </button>
         
-        <!-- PERBAIKAN 6: py-3 -> py-2, teks disingkat -->
         <button class="btn btn-outline-secondary w-100 rounded-pill fw-bold py-2 mt-1 text-white" style="font-size: 0.8rem;" @click="selectedMember = null">
           Tutup
         </button>
@@ -143,7 +152,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import QRCode from 'qrcode'
 
 const { data: members, pending } = await useFetch('/api/members', { server: false })
@@ -181,6 +190,36 @@ const filteredMembers = computed(() => {
 
   return result
 })
+
+// ==========================================
+// LOGIKA PAGINATION FRONTEND
+// ==========================================
+const currentPage = ref(1)
+const itemsPerPage = 15
+
+// Kembalikan ke halaman 1 jika user melakukan pencarian atau mengganti filter
+watch([searchQuery, filterStatus], () => {
+  currentPage.value = 1
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredMembers.value.length / itemsPerPage) || 1
+})
+
+const paginatedMembers = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredMembers.value.slice(start, end)
+})
+
+const prevPage = () => {
+  if (currentPage.value > 1) currentPage.value--
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) currentPage.value++
+}
+// ==========================================
 
 const showQR = async (member) => {
   selectedMember.value = member
