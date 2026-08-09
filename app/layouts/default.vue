@@ -6,6 +6,11 @@ function isMemberActive() {
   return route.path.startsWith('/members')
 }
 
+// FUNGSI BARU: Cek apakah di Dashboard ATAU di halaman Logs
+function isDashboardActive() {
+  return route.path === '/' || route.path.startsWith('/logs')
+}
+
 async function handleLogout() {
   try {
     await $fetch('/api/auth/logout', { method: 'POST' })
@@ -25,10 +30,13 @@ async function handleLogout() {
         <h5 class="fw-bold mb-0 text-white">MemberTrack</h5>
       </div>
       <nav class="nav flex-column p-3 gap-2 flex-grow-1">
-        <NuxtLink to="/" class="d-flex align-items-center px-3 py-2 text-secondary text-decoration-none rounded-3 fw-medium" active-class="bg-primary bg-opacity-10 text-primary fw-bold" exact>
+        
+        <!-- PERUBAHAN: Gunakan :class dinamis dengan isDashboardActive() -->
+        <NuxtLink to="/" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded-3 fw-medium" :class="isDashboardActive() ? 'bg-primary bg-opacity-10 text-primary fw-bold' : 'text-secondary'">
           <span class="fs-5 me-3">📊</span> Dashboard
         </NuxtLink>
-        <NuxtLink to="/members" class="d-flex align-items-center px-3 py-2 text-secondary text-decoration-none rounded-3 fw-medium" :class="{ 'bg-primary bg-opacity-10 text-primary fw-bold': isMemberActive() }">
+
+        <NuxtLink to="/members" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded-3 fw-medium" :class="isMemberActive() ? 'bg-primary bg-opacity-10 text-primary fw-bold' : 'text-secondary'">
           <span class="fs-5 me-3">👥</span> Members
         </NuxtLink>
         <NuxtLink to="/scanner" class="d-flex align-items-center px-3 py-2 text-secondary text-decoration-none rounded-3 fw-medium" active-class="bg-primary bg-opacity-10 text-primary fw-bold">
@@ -68,28 +76,30 @@ async function handleLogout() {
     <!-- MOBILE BOTTOM NAV -->
     <nav class="d-md-none fixed-bottom bg-dark border-top shadow-lg" style="z-index: 1030; padding-bottom: env(safe-area-inset-bottom);">
       <div class="d-flex justify-content-around px-2 py-2">
-        <NuxtLink to="/" class="d-flex flex-column align-items-center justify-content-center p-2 text-secondary text-decoration-none rounded-3" active-class="text-primary fw-bold" exact>
-          <span class="fs-4 mb-1">📊</span>
+        
+        <!-- PERUBAHAN: Gunakan :class dinamis dengan isDashboardActive() -->
+        <NuxtLink to="/" class="d-flex flex-column align-items-center justify-content-center p-2 text-decoration-none rounded-3" :class="isDashboardActive() ? 'text-primary fw-bold' : 'text-secondary'">
+          <i class="bi bi-grid-1x2-fill fs-5 mb-1"></i>
           <span style="font-size: 0.7rem;">Dashboard</span>
         </NuxtLink>
         
-        <NuxtLink to="/members" class="d-flex flex-column align-items-center justify-content-center p-2 text-secondary text-decoration-none rounded-3" :class="{ 'text-primary fw-bold': isMemberActive() }">
-          <span class="fs-4 mb-1">👥</span>
+        <NuxtLink to="/members" class="d-flex flex-column align-items-center justify-content-center p-2 text-decoration-none rounded-3" :class="isMemberActive() ? 'text-primary fw-bold' : 'text-secondary'">
+          <i class="bi bi-people-fill fs-4 mb-1"></i>
           <span style="font-size: 0.7rem;">Members</span>
         </NuxtLink>
         
         <NuxtLink to="/scanner" class="d-flex flex-column align-items-center justify-content-center p-2 text-secondary text-decoration-none rounded-3" active-class="text-primary fw-bold">
-          <span class="fs-4 mb-1">📷</span>
+          <i class="bi bi-qr-code-scan fs-4 mb-1"></i>
           <span style="font-size: 0.7rem;">Scanner</span>
         </NuxtLink>
         
         <NuxtLink to="/settings" class="d-flex flex-column align-items-center justify-content-center p-2 text-secondary text-decoration-none rounded-3" active-class="text-primary fw-bold">
-          <span class="fs-4 mb-1">⚙️</span>
+          <i class="bi bi-gear-fill fs-4 mb-1"></i>
           <span style="font-size: 0.7rem;">Settings</span>
         </NuxtLink>
 
         <NuxtLink to="/profile"  class="d-flex flex-column align-items-center justify-content-center p-2 text-secondary text-decoration-none rounded-3" active-class="text-primary fw-bold">
-          <span class="fs-4 mb-1">👤</span> <span style="font-size: 0.7rem;">Profile</span>
+          <i class="bi bi-person-fill fs-4 mb-1"></i> <span style="font-size: 0.7rem;">Profile</span>
         </NuxtLink>
       </div>
     </nav>

@@ -2,76 +2,88 @@ import { prisma } from '~~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
-  const range = (query.range as string) || 'today'
+  
+  // Parameter terpisah
+  const range = query.range as string || 'today'
+  const lbRange = query.lbRange as string || 'all'
+  // Bebas menerima berapapun angka dari input box, default 5
+  const lbLimit = parseInt(query.lbLimit as string) || 5
 
-  const now = new Date()
-  let startDate = new Date()
-
-  if (range === 'today') {
-    startDate.setHours(0, 0, 0, 0)
-  } else if (range === '7d') {
-    startDate.setDate(now.getDate() - 7)
-  } else if (range === '30d') {
-    startDate.setDate(now.getDate() - 30)
-  } else if (range === '1y') {
-    startDate.setFullYear(now.getFullYear() - 1)
-  } else {
-    startDate = new Date(0) // All time
+  const getDateFilter = (rangeType: string) => {
+    if (rangeType === 'all') return undefined
+    
+    const now = new Date()
+    const startDate = new Date()
+    
+    if (rangeType === 'today') {
+      startDate.setHours(0, 0, 0, 0)
+    } else if (rangeType === '7d') {
+      startDate.setDate(now.getDate() - 7)
+    } else if (rangeType === '30d') {
+      startDate.setDate(now.getDate() - 30)
+    } else if (rangeType === '1y') {
+      startDate.setFullYear(now.getFullYear() - 1)
+    }
+    
+    return { gte: startDate, lte: now }
   }
 
-  const [totalAttendance, activeMembers, topMembers, recentLogs] = await Promise.all([
-    // Total kehadiran berdasarkan filter rentang waktu
-    prisma.attendanceLog.count({
-      where: { scannedAt: { gte: startDate }, deletedAt: null }
-    }),
-    // Total keseluruhan member aktif
-    prisma.member.count({
+  try {
+    const globalDateFilter = getDateFilter(range)
+    const leaderboardDateFilter = getDateFilter(lbRange)
+
+    // 1. MEMBER AKTIF (All Time)
+    const activeMembers = await prisma.member.count({
       where: { isActive: true }
-    }),
-    // Peringkat member paling rajin (Leaderboard)
-    prisma.attendanceLog.groupBy({
+    })
+
+    // 2. TOTAL KEHADIRAN
+    const totalAttendance = await prisma.attendanceLog.count({
+      where: globalDateFilter ? { scannedAt: globalDateFilter } : undefined
+    })
+
+    // 3. LOG AKTIVITAS (Limit 10 di beranda agar ringkas)
+    const logs = await prisma.attendanceLog.findMany({
+      where: globalDateFilter ? { scannedAt: globalDateFilter } : undefined,
+      orderBy: { scannedAt: 'desc' },
+      take: 10, 
+      include: { 
+        member: { select: { name: true } },
+        scannedBy: { select: { name: true } }
+      }
+    })
+
+    // 4. LEADERBOARD (Limit dinamis sesuai ketikan)
+    const leaderboardGroups = await prisma.attendanceLog.groupBy({
       by: ['memberId'],
-      where: { scannedAt: { gte: startDate }, deletedAt: null },
+      where: leaderboardDateFilter ? { scannedAt: leaderboardDateFilter } : undefined,
       _count: { memberId: true },
       orderBy: { _count: { memberId: 'desc' } },
-      take: 5
-    }),
-    // Log aktivitas terbaru dalam rentang waktu
-    prisma.attendanceLog.findMany({
-      where: { scannedAt: { gte: startDate }, deletedAt: null },
-      include: {
-        member: { select: { name: true, uuid: true } },
-        scannedBy: { select: { name: true } }
-      },
-      orderBy: { scannedAt: 'desc' },
-      take: 10
+      take: lbLimit
     })
-  ])
 
-  // Ambil detail nama member untuk leaderboard
-  const memberIds = topMembers.map(item => item.memberId)
-  const membersData = await prisma.member.findMany({
-    where: { id: { in: memberIds } },
-    select: { id: true, name: true, uuid: true }
-  })
+    const memberIds = leaderboardGroups.map(g => g.memberId)
+    const members = await prisma.member.findMany({
+      where: { id: { in: memberIds } },
+      select: { id: true, name: true, uuid: true }
+    })
 
-  const leaderboard = topMembers.map(item => {
-    const m = membersData.find(x => x.id === item.memberId)
+    const leaderboard = leaderboardGroups.map(g => {
+      const member = members.find(m => m.id === g.memberId)
+      return {
+        uuid: member?.uuid || '',
+        name: member?.name || 'Member Dihapus',
+        count: g._count.memberId
+      }
+    })
+
     return {
-      name: m?.name || 'Member Tidak Dikenal',
-      uuid: m?.uuid,
-      count: item._count.memberId
+      stats: { totalAttendance, activeMembers },
+      leaderboard,
+      data: logs
     }
-  })
-
-  return {
-    success: true,
-    stats: {
-      totalAttendance,
-      activeMembers,
-      range
-    },
-    leaderboard,
-    data: recentLogs
+  } catch (error) {
+    console.error('Dashboard Stats Error:', error)
+    throw createError({ statusCode: 500, statusMessage: 'Gagal memuat data dashboard' })
   }
 })
