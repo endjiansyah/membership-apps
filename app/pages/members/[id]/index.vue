@@ -118,6 +118,7 @@
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 
+const { showToast } = useToast()
 const route = useRoute()
 const memberId = route.params.id
 const isProcessing = ref(false)
@@ -180,10 +181,10 @@ const manualCheckIn = async () => {
   isProcessing.value = true
   try {
     await $fetch('/api/attendance/manual', { method: 'POST', body: { memberId: member.value.id } })
-    alert('Berhasil mencatat kehadiran manual.')
+    showToast('Berhasil mencatat kehadiran manual.', 'success')
     refresh()
   } catch (error) {
-    alert(error.data?.statusMessage || 'Gagal mencatat kehadiran.')
+    showToast(error.data?.statusMessage || 'Gagal mencatat kehadiran.', 'error')
   } finally {
     isProcessing.value = false
   }
@@ -200,7 +201,7 @@ const toggleStatus = async () => {
     })
     refresh()
   } catch (error) {
-    alert('Gagal mengubah status.')
+    showToast('Gagal mengubah status.', 'error')
   } finally {
     isProcessing.value = false
   }
@@ -211,10 +212,10 @@ const deleteMember = async () => {
   isProcessing.value = true
   try {
     await $fetch(`/api/members/${member.value.id}`, { method: 'DELETE' })
-    alert('Member berhasil dihapus secara permanen.')
+    showToast('Member berhasil dihapus secara permanen.', 'success')
     navigateTo('/members') 
   } catch (error) {
-    alert(error.data?.statusMessage || 'Gagal menghapus member.')
+    showToast(error.data?.statusMessage || 'Gagal menghapus member.', 'error')
     isProcessing.value = false 
   }
 }
