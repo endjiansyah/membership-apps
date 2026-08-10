@@ -1,5 +1,4 @@
 <template>
-  <!-- PERBAIKAN 1: Hapus container-fluid dan px-0 yang bentrok, gunakan mx-auto px-2 agar pas di mobile -->
   <div class="py-2 py-md-3 pb-5 mb-5 mx-auto px-2 px-md-0" style="max-width: 600px;">
     
     <div v-if="pending" class="text-center py-5">
@@ -7,7 +6,6 @@
       <p class="text-secondary mt-3 small">Memuat data member...</p>
     </div>
 
-    <!-- PERBAIKAN 2: Hapus class="px-3" yang bersarang di sini -->
     <div v-else-if="member">
       
       <!-- AREA AVATAR & HEADER PROFIL -->
@@ -27,14 +25,12 @@
         <p class="text-secondary small font-monospace mb-0">ID: {{ member.uuid }}</p>
         <p class="text-secondary small mb-3">Terdaftar sejak {{ new Date(member.createdAt).toLocaleDateString('id-ID', { month: 'long', day: 'numeric', year: 'numeric' }) }}</p>
 
-        <!-- Tombol Edit Profil -->
         <NuxtLink :to="`/members/${member.id}/edit`" class="btn btn-outline-secondary btn-sm rounded-pill px-4 fw-bold text-white border-secondary border-opacity-50">
           Edit Data Profil
         </NuxtLink>
       </div>
 
       <!-- AREA AKSI UTAMA -->
-      <!-- PERBAIKAN 3: Hapus class="px-1" di sini -->
       <div class="mb-3">
         <button @click="showQR" class="btn btn-outline-info w-100 fw-bold rounded-pill py-2 mb-2 border-info border-opacity-50" style="font-size: 0.8rem;">
           Download QR
@@ -49,7 +45,6 @@
           </button>
         </div>
 
-        <!-- Tombol Hapus -->
         <button v-if="!member.isActive" @click="deleteMember" class="btn btn-outline-danger w-100 fw-bold rounded-pill py-2 mt-1 border-danger border-opacity-50" style="font-size: 0.8rem;" :disabled="isProcessing">
           Hapus Permanen
         </button>
@@ -109,168 +104,28 @@
         </div>
       </div>
 
-      <!-- RIWAYAT & LOGS -->
-      <div class="mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <small class="text-secondary fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">Riwayat & Aktivitas</small>
-        </div>
-        
-        <!-- Tab Selector -->
-        <div class="d-flex gap-2 mb-3 overflow-auto pb-1" style="scrollbar-width: none;">
-          <button @click="activeTab = 'kehadiran'" class="btn rounded-pill fw-bold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;" :class="activeTab === 'kehadiran' ? 'btn-primary text-dark px-3' : 'btn-dark border border-secondary border-opacity-25 text-secondary px-3'">
-            Kehadiran
-          </button>
-          <button @click="activeTab = 'aktivitas'" class="btn rounded-pill fw-bold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;" :class="activeTab === 'aktivitas' ? 'btn-primary text-dark px-3' : 'btn-dark border border-secondary border-opacity-25 text-secondary px-3'">
-            Audit Trail
-          </button>
-        </div>
+      <!-- MEMANGGIL KOMPONEN HISTORY YANG BARU -->
+      <MemberHistory :member="member" />
 
-        <!-- Filter Waktu -->
-        <div class="mb-3">
-          <div class="d-flex gap-2 overflow-auto pb-1" style="scrollbar-width: none;">
-            <button v-for="ft in filterOptions" :key="ft.value" @click="timeFilter = ft.value" class="btn btn-sm rounded-pill fw-bold px-3 border border-secondary border-opacity-25" style="font-size: 0.7rem;" :class="timeFilter === ft.value ? 'bg-secondary text-white' : 'bg-dark text-secondary'">
-              {{ ft.label }}
-            </button>
-          </div>
-          
-          <div v-if="timeFilter === 'custom'" class="d-flex gap-2 mt-2 p-2 bg-dark rounded-3 border border-secondary border-opacity-25">
-            <input type="date" v-model="customStart" class="form-control form-control-sm bg-black text-white border-secondary border-opacity-25">
-            <span class="text-secondary align-self-center small">-</span>
-            <input type="date" v-model="customEnd" class="form-control form-control-sm bg-black text-white border-secondary border-opacity-25">
-          </div>
-        </div>
-
-        <!-- LIST: ATTENDANCE LOGS (Dengan Pagination Baru) -->
-        <div v-if="activeTab === 'kehadiran'" class="d-flex flex-column gap-2">
-          <div v-if="filteredAttendance.length === 0" class="text-center py-4 border border-secondary border-opacity-25 rounded-4 bg-dark shadow-sm">
-            <p class="text-secondary mb-0 small">Tidak ada riwayat kehadiran pada periode ini.</p>
-          </div>
-          
-          <template v-else>
-            <!-- Gunakan paginatedAttendance, bukan filteredAttendance -->
-            <div v-for="log in paginatedAttendance" :key="log.id" class="card bg-dark border border-secondary border-opacity-25 rounded-4 p-3 shadow-sm">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="d-flex align-items-center gap-2">
-                  <div class="rounded-circle flex-shrink-0" :class="log.entryMethod === 'QR_SCAN' ? 'bg-success' : 'bg-primary'" style="width: 8px; height: 8px;"></div>
-                  <h6 class="mb-0 fw-bold text-white" style="font-size: 0.85rem;">
-                    {{ new Date(log.scannedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) }}
-                  </h6>
-                </div>
-                <span class="text-secondary font-monospace small">{{ new Date(log.scannedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }} WIB</span>
-              </div>
-              <div class="ps-3 border-start border-secondary border-opacity-25 ms-1">
-                <p class="mb-1 text-secondary" style="font-size: 0.75rem;">
-                  Metode: <span class="text-white fw-bold">{{ log.entryMethod === 'QR_SCAN' ? 'QR Scanner' : 'Input Manual' }}</span>
-                </p>
-                <p class="mb-0 text-secondary" style="font-size: 0.75rem;">
-                  Petugas: <span class="text-white fw-bold">{{ log.scannedBy?.name || `ID #${log.scannedById}` }}</span>
-                </p>
-              </div>
-            </div>
-
-            <!-- Kontrol Pagination Kehadiran -->
-            <div v-if="totalAttPages > 1" class="d-flex justify-content-between align-items-center mt-2">
-              <button @click="prevAttPage" :disabled="currentAttPage === 1" class="btn btn-sm btn-dark border border-secondary border-opacity-50 rounded-pill px-3 text-white fw-bold" style="font-size: 0.7rem;">
-                &laquo; Prev
-              </button>
-              <span class="text-secondary fw-bold" style="font-size: 0.75rem;">
-                Hal {{ currentAttPage }} / {{ totalAttPages }}
-              </span>
-              <button @click="nextAttPage" :disabled="currentAttPage === totalAttPages" class="btn btn-sm btn-dark border border-secondary border-opacity-50 rounded-pill px-3 text-white fw-bold" style="font-size: 0.7rem;">
-                Next &raquo;
-              </button>
-            </div>
-          </template>
-        </div>
-
-        <!-- LIST: AUDIT LOGS (Dengan Pagination Baru) -->
-        <div v-if="activeTab === 'aktivitas'" class="d-flex flex-column gap-2">
-          <div v-if="filteredAudit.length === 0" class="text-center py-4 border border-secondary border-opacity-25 rounded-4 bg-dark shadow-sm">
-            <p class="text-secondary mb-0 small">Tidak ada riwayat administratif pada periode ini.</p>
-          </div>
-          
-          <template v-else>
-            <!-- Gunakan paginatedAudit, bukan filteredAudit -->
-            <div v-for="audit in paginatedAudit" :key="audit.id" class="card bg-dark border border-secondary border-opacity-25 rounded-4 p-3 shadow-sm">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <h6 class="mb-0 fw-bold text-white" style="font-size: 0.85rem;">{{ formatAuditAction(audit.action) }}</h6>
-                <span class="text-secondary font-monospace small">{{ new Date(audit.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) }}</span>
-              </div>
-              <div class="ps-3 border-start border-secondary border-opacity-25 ms-1">
-                <p class="mb-1 text-secondary" style="font-size: 0.75rem;">
-                  Sumber: <span class="text-white">{{ audit.source }}</span>
-                </p>
-                <p class="mb-0 text-secondary" style="font-size: 0.75rem;">
-                  Dieksekusi oleh: <span class="text-white fw-bold">{{ audit.user?.name || `Petugas #${audit.performedBy}` }}</span>
-                </p>
-
-                <div v-if="isJson(audit.details)" class="mt-2">
-                  <button @click="toggleAudit(audit.id)" class="btn btn-sm btn-dark border border-secondary border-opacity-25 rounded text-secondary" style="font-size: 0.7rem; padding: 2px 8px;">
-                    {{ expandedAuditId === audit.id ? 'Sembunyikan Detail' : 'Lihat Detail Perubahan' }}
-                  </button>
-                  
-                  <div v-if="expandedAuditId === audit.id" class="mt-2 bg-black bg-opacity-50 p-2 rounded-3 border border-secondary border-opacity-25">
-                    <div v-for="(change, idx) in parseDetails(audit.details)" :key="idx" class="mb-1">
-                      <span class="text-secondary d-block fw-bold" style="font-size: 0.65rem;">{{ change.field }}</span>
-                      <div class="d-flex align-items-center gap-2" style="font-size: 0.75rem;">
-                        <span class="text-danger text-decoration-line-through text-truncate" style="max-width: 40%;">{{ change.old }}</span>
-                        <span class="text-secondary">→</span>
-                        <span class="text-success text-truncate" style="max-width: 40%;">{{ change.new }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Kontrol Pagination Audit -->
-            <div v-if="totalAuditPages > 1" class="d-flex justify-content-between align-items-center mt-2">
-              <button @click="prevAuditPage" :disabled="currentAuditPage === 1" class="btn btn-sm btn-dark border border-secondary border-opacity-50 rounded-pill px-3 text-white fw-bold" style="font-size: 0.7rem;">
-                &laquo; Prev
-              </button>
-              <span class="text-secondary fw-bold" style="font-size: 0.75rem;">
-                Hal {{ currentAuditPage }} / {{ totalAuditPages }}
-              </span>
-              <button @click="nextAuditPage" :disabled="currentAuditPage === totalAuditPages" class="btn btn-sm btn-dark border border-secondary border-opacity-50 rounded-pill px-3 text-white fw-bold" style="font-size: 0.7rem;">
-                Next &raquo;
-              </button>
-            </div>
-          </template>
-        </div>
-
-      </div>
     </div>
 
-<QrCardModal :member="selectedMember" @close="selectedMember = null" />
+    <!-- MEMANGGIL KOMPONEN MODAL QR KITA -->
+    <QrCardModal :member="selectedMember" @close="selectedMember = null" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 
-// VARIABEL SAKLAR UNTUK MEMBUKA MODAL QR
+const route = useRoute()
+const memberId = route.params.id
+const isProcessing = ref(false)
+
 const selectedMember = ref(null)
 const showQR = () => {
   selectedMember.value = member.value
 }
-const route = useRoute()
-const memberId = route.params.id
-
-const activeTab = ref('kehadiran')
-const isProcessing = ref(false)
-const expandedAuditId = ref(null)
-
-const timeFilter = ref('all')
-const customStart = ref('')
-const customEnd = ref('')
-const filterOptions = [
-  { label: '7 Hari', value: '7d' },
-  { label: '30 Hari', value: '30d' },
-  { label: '1 Tahun', value: '1y' },
-  { label: 'Semua', value: 'all' },
-  { label: 'Custom', value: 'custom' }
-]
 
 const { data: member, pending, refresh } = await useFetch(`/api/members/${memberId}`, { server: false })
 const { data: fields } = await useFetch('/api/fields', { server: false })
@@ -293,94 +148,6 @@ const parseDynamicData = (data) => {
   try { return typeof data === 'string' ? JSON.parse(data) : data } 
   catch (e) { return {} }
 }
-
-const toggleAudit = (id) => {
-  expandedAuditId.value = expandedAuditId.value === id ? null : id
-}
-
-const isJson = (str) => {
-  if (!str) return false
-  try { 
-    const parsed = JSON.parse(str)
-    return Array.isArray(parsed)
-  } catch(e) { return false }
-}
-
-const parseDetails = (str) => {
-  try { return JSON.parse(str) } catch(e) { return [] }
-}
-
-const formatAuditAction = (action) => {
-  const actions = {
-    'AKTIVASI_STATUS': 'Aktivasi Membership',
-    'NONAKTIF_STATUS': 'Penonaktifan Membership',
-    'UPDATE_PROFIL': 'Pembaruan Data Member',
-    'CREATE_MEMBER': 'Pendaftaran Member Baru'
-  }
-  return actions[action] || action
-}
-
-const isWithinDateRange = (dateString) => {
-  if (!dateString) return false
-  const targetDate = new Date(dateString)
-  const now = new Date()
-  
-  if (timeFilter.value === '7d') return (now - targetDate) <= 7 * 24 * 60 * 60 * 1000
-  if (timeFilter.value === '30d') return (now - targetDate) <= 30 * 24 * 60 * 60 * 1000
-  if (timeFilter.value === '1y') return (now - targetDate) <= 365 * 24 * 60 * 60 * 1000
-  
-  if (timeFilter.value === 'custom') {
-    const start = customStart.value ? new Date(customStart.value) : new Date(0)
-    const end = customEnd.value ? new Date(customEnd.value) : new Date()
-    end.setHours(23, 59, 59, 999)
-    return targetDate >= start && targetDate <= end
-  }
-  
-  return true
-}
-
-const filteredAttendance = computed(() => {
-  if (!member.value?.logs) return []
-  return member.value.logs.filter(log => isWithinDateRange(log.scannedAt)).sort((a, b) => new Date(b.scannedAt) - new Date(a.scannedAt))
-})
-
-const filteredAudit = computed(() => {
-  if (!member.value?.auditLogs) return []
-  return member.value.auditLogs.filter(audit => isWithinDateRange(audit.createdAt)).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-})
-
-// ==========================================
-// LOGIKA PAGINATION FRONTEND UNTUK RIWAYAT
-// ==========================================
-const currentAttPage = ref(1)
-const currentAuditPage = ref(1)
-const itemsPerPage = 10 // Tampilkan 10 riwayat per halaman agar tidak terlalu panjang
-
-// Reset ke halaman 1 jika filter waktu atau tab diubah
-watch([timeFilter, customStart, customEnd, activeTab], () => {
-  currentAttPage.value = 1
-  currentAuditPage.value = 1
-})
-
-// Pagination Kehadiran
-const totalAttPages = computed(() => Math.ceil(filteredAttendance.value.length / itemsPerPage) || 1)
-const paginatedAttendance = computed(() => {
-  const start = (currentAttPage.value - 1) * itemsPerPage
-  return filteredAttendance.value.slice(start, start + itemsPerPage)
-})
-const prevAttPage = () => { if (currentAttPage.value > 1) currentAttPage.value-- }
-const nextAttPage = () => { if (currentAttPage.value < totalAttPages.value) currentAttPage.value++ }
-
-// Pagination Audit
-const totalAuditPages = computed(() => Math.ceil(filteredAudit.value.length / itemsPerPage) || 1)
-const paginatedAudit = computed(() => {
-  const start = (currentAuditPage.value - 1) * itemsPerPage
-  return filteredAudit.value.slice(start, start + itemsPerPage)
-})
-const prevAuditPage = () => { if (currentAuditPage.value > 1) currentAuditPage.value-- }
-const nextAuditPage = () => { if (currentAuditPage.value < totalAuditPages.value) currentAuditPage.value++ }
-// ==========================================
-
 
 const stats = computed(() => {
   const logs = member.value?.logs || []
@@ -412,10 +179,7 @@ const manualCheckIn = async () => {
   if (!confirm('Catat kehadiran manual tanpa scan QR untuk member ini?')) return
   isProcessing.value = true
   try {
-    await $fetch('/api/attendance/manual', {
-      method: 'POST',
-      body: { memberId: member.value.id }
-    })
+    await $fetch('/api/attendance/manual', { method: 'POST', body: { memberId: member.value.id } })
     alert('Berhasil mencatat kehadiran manual.')
     refresh()
   } catch (error) {
@@ -428,15 +192,11 @@ const manualCheckIn = async () => {
 const toggleStatus = async () => {
   const targetAction = member.value.isActive ? 'menonaktifkan' : 'mengaktifkan'
   if (!confirm(`Anda yakin ingin ${targetAction} membership ini secara manual?`)) return
-  
   isProcessing.value = true
   try {
     await $fetch(`/api/members/${member.value.id}/status`, {
       method: 'PUT',
-      body: { 
-        isActive: !member.value.isActive,
-        source: 'MANUAL_ADMIN'
-      }
+      body: { isActive: !member.value.isActive, source: 'MANUAL_ADMIN' }
     })
     refresh()
   } catch (error) {
@@ -447,14 +207,10 @@ const toggleStatus = async () => {
 }
 
 const deleteMember = async () => {
-  if (!confirm('PERINGATAN: Anda yakin ingin menghapus member ini beserta seluruh riwayat kehadirannya? Tindakan ini tidak dapat dibatalkan.')) return
-  
+  if (!confirm('PERINGATAN: Anda yakin ingin menghapus member ini?')) return
   isProcessing.value = true
   try {
-    await $fetch(`/api/members/${member.value.id}`, {
-      method: 'DELETE'
-    })
-    
+    await $fetch(`/api/members/${member.value.id}`, { method: 'DELETE' })
     alert('Member berhasil dihapus secara permanen.')
     navigateTo('/members') 
   } catch (error) {
@@ -463,9 +219,3 @@ const deleteMember = async () => {
   }
 }
 </script>
-
-<style scoped>
-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-}
-</style>
