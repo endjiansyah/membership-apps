@@ -1,8 +1,8 @@
 <template>
-  <div class="container-fluid px-0 py-3 pb-5 mb-5" style="max-width: 600px;">
+  <div class="py-3 pb-5 mb-5" style="max-width: 600px;">
 
 
-    <form @submit.prevent="saveMember" class="px-3 pb-5 mb-5">
+    <form @submit.prevent="saveMember" class="pb-5 mb-5">
       
       <!-- AREA UPLOAD FOTO (Mempertahankan UI Lama Anda) -->
       <div class="d-flex flex-column align-items-center mb-4">

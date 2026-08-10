@@ -1,5 +1,5 @@
 <template>
-  <div class="container-fluid px-1 px-md-3 py-2 py-md-3 pb-5 mb-5" style="max-width: 600px;">
+  <div class="px-md-3 py-2 py-md-3 pb-5 mb-5" style="max-width: 600px;">
 
     <!-- LOADING STATE -->
     <div v-if="pending" class="text-center py-5">

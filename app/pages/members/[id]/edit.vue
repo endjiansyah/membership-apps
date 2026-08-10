@@ -1,8 +1,8 @@
 <template>
-  <div class="container-fluid px-0 py-3 pb-5 mb-5" style="max-width: 600px;">
+  <div class="py-3 pb-5 mb-5" style="max-width: 600px;">
     
     <!-- HEADER -->
-    <div class="d-flex align-items-center mb-4 px-3 sticky-top bg-black bg-opacity-75 py-2" style="z-index: 1020; backdrop-filter: blur(8px);">
+    <div class="d-flex align-items-center mb-4 px-3 bg-black bg-opacity-75 py-2" style="z-index: 1020; backdrop-filter: blur(8px);">
       <NuxtLink :to="`/members/${memberId}`" class="text-decoration-none text-secondary me-3" aria-label="Kembali">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
           <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
@@ -17,7 +17,7 @@
       <p class="text-secondary mt-3 small">Memuat data member...</p>
     </div>
 
-    <form v-else @submit.prevent="updateMember" class="px-3 pb-5">
+    <form v-else @submit.prevent="updateMember" class="pb-5">
       
       <!-- AREA UPLOAD / EDIT FOTO -->
       <div class="d-flex flex-column align-items-center mb-4">
