@@ -79,6 +79,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 
+const { showToast } = useToast()
 const { data: authData, pending, refresh } = await useFetch('/api/auth/me', { server: false })
 const user = computed(() => authData.value?.user)
 
@@ -99,9 +100,9 @@ watch(user, (newVal) => {
 
 const updateProfile = async () => {
   if (form.value.newPassword) {
-    if (!form.value.oldPassword) return alert('Password lama wajib diisi!')
-    if (form.value.newPassword !== form.value.confirmPassword) return alert('Konfirmasi password tidak cocok!')
-    if (form.value.newPassword.length < 6) return alert('Password baru minimal 6 karakter.')
+    if (!form.value.oldPassword) return showToast('Password lama wajib diisi!', 'error')
+    if (form.value.newPassword !== form.value.confirmPassword) return showToast('Konfirmasi password tidak cocok!', 'error')
+    if (form.value.newPassword.length < 6) return showToast('Password baru minimal 6 karakter.', 'error')
   }
 
   isSaving.value = true
@@ -116,13 +117,13 @@ const updateProfile = async () => {
       }
     })
     
-    alert('Profil berhasil diperbarui!')
+    showToast('Profil berhasil diperbarui!', 'success')
     form.value.oldPassword = ''
     form.value.newPassword = ''
     form.value.confirmPassword = ''
     await refresh()
   } catch (error) {
-    alert(error.data?.statusMessage || 'Gagal memperbarui profil.')
+    showToast(error.data?.statusMessage || 'Gagal memperbarui profil.', 'error')
   } finally {
     isSaving.value = false
   }
@@ -136,7 +137,7 @@ const handleLogout = async () => {
     sessionCookie.value = null
     navigateTo('/login')
   } catch (err) {
-    alert('Gagal logout.')
+    showToast('Gagal logout.', 'error')
   }
 }
 </script>

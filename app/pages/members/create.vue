@@ -105,6 +105,7 @@ import { ref } from 'vue'
 
 const { data: fields } = await useFetch('/api/fields', { server: false })
 
+const { showToast } = useToast()
 const isLoading = ref(false)
 const photoPreview = ref(null)
 const fileInput = ref(null)
@@ -184,11 +185,11 @@ const saveMember = async () => {
       body: formData
     })
     
-    alert('Member berhasil dibuat!')
+    showToast('Member berhasil dibuat!', 'success')
     navigateTo('/members')
   } catch (error) {
     console.error(error)
-    alert('Gagal membuat member. Pastikan semua kolom wajib diisi.')
+    showToast('Gagal membuat member. Pastikan semua kolom wajib diisi.', 'error')
   } finally {
     isLoading.value = false
   }

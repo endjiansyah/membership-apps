@@ -131,6 +131,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
+const { showToast } = useToast()
 const formatForInput = (date) => date.toISOString().split('T')[0]
 const today = new Date()
 const sevenDaysAgo = new Date(today)
@@ -191,7 +192,7 @@ const fetchLogs = async (page = 1) => {
     totalData.value = response.meta.totalRecords
 
   } catch (error) {
-    alert('Gagal mengambil data histori.')
+    showToast('Gagal mengambil data histori.', 'error')
   } finally {
     pending.value = false
   }

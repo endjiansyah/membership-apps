@@ -120,6 +120,7 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+const { showToast } = useToast()
 const route = useRoute()
 const router = useRouter()
 const memberId = route.params.id
@@ -217,10 +218,10 @@ const updateMember = async () => {
       body: formData
     })
     
-    alert('Data member berhasil diperbarui!')
+    showToast('Data member berhasil diperbarui!', 'success')
     router.push(`/members/${memberId}`)
   } catch (error) {
-    alert(error.data?.statusMessage || 'Gagal memperbarui data member.')
+    showToast(error.data?.statusMessage || 'Gagal memperbarui data member.', 'error')
   } finally {
     isLoading.value = false
   }

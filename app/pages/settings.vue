@@ -163,6 +163,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 
+const { showToast } = useToast()
 const { data: authData } = await useFetch('/api/auth/me', { server: false })
 const authUser = computed(() => authData.value?.user)
 
@@ -183,7 +184,7 @@ const saveField = async () => {
     resetFieldForm()
     refreshFields()
   } catch (error) {
-    alert(error.data?.statusMessage || 'Terjadi kesalahan')
+    showToast(error.data?.statusMessage || 'Terjadi kesalahan', 'error')
   }
 }
 
@@ -209,7 +210,7 @@ const deleteField = async (id) => {
     await $fetch(`/api/fields/${id}`, { method: 'DELETE' })
     refreshFields()
   } catch (error) {
-    alert('Gagal menghapus kolom.')
+    showToast('Gagal menghapus kolom.', 'error')
   }
 }
 
@@ -227,11 +228,11 @@ const userForm = ref({ name: '', email: '', password: '', role: 'PETUGAS' })
 const saveUser = async () => {
   try {
     await $fetch('/api/users', { method: 'POST', body: userForm.value })
-    alert('Petugas berhasil ditambahkan!')
+    showToast('Petugas berhasil ditambahkan!', 'success')
     userForm.value = { name: '', email: '', password: '', role: 'PETUGAS' }
     refreshUsers()
   } catch (error) {
-    alert(error.data?.statusMessage || 'Gagal menambahkan petugas')
+    showToast(error.data?.statusMessage || 'Gagal menambahkan petugas', 'error')
   }
 }
 
@@ -241,7 +242,7 @@ const deleteUser = async (id) => {
     await $fetch(`/api/users/${id}`, { method: 'DELETE' })
     refreshUsers()
   } catch (error) {
-    alert('Gagal menghapus petugas')
+    showToast('Gagal menghapus petugas', 'error')
   }
 }
 
@@ -250,7 +251,7 @@ const resetPassword = async (userId) => {
   if (!newPassword) return
 
   if (newPassword.length < 6) {
-    alert('Password baru minimal harus 6 karakter.')
+    showToast('Password baru minimal harus 6 karakter.', 'error')
     return
   }
 
@@ -259,9 +260,9 @@ const resetPassword = async (userId) => {
       method: 'PUT',
       body: { newPassword }
     })
-    alert('Password petugas berhasil direset!')
+    showToast('Password petugas berhasil direset!', 'success')
   } catch (error) {
-    alert(error.data?.statusMessage || 'Gagal mereset password.')
+    showToast(error.data?.statusMessage || 'Gagal mereset password.', 'error')
   }
 }
 </script>
