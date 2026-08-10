@@ -19,7 +19,6 @@
 
     <!-- TAB: DYNAMIC FIELDS -->
     <div v-if="activeTab === 'fields'">
-      <!-- Form Input Tetap Sama -->
       <div class="card bg-dark border border-secondary border-opacity-25 rounded-4 shadow-sm mb-4">
         <div class="card-body p-3">
           <h6 class="fw-bold text-white mb-3" style="font-size: 0.9rem;">Form Kolom Tambahan</h6>
@@ -57,7 +56,6 @@
         </div>
       </div>
 
-      <!-- PERBAIKAN: List Fields menggunakan Card Layout yang ramah HP -->
       <div>
         <h6 class="fw-bold text-secondary mb-3" style="font-size: 0.8rem;">DAFTAR KOLOM AKTIF</h6>
         
@@ -96,7 +94,6 @@
 
     <!-- TAB: USERS / PETUGAS (Hanya Super Admin) -->
     <div v-if="activeTab === 'users' && authUser?.role === 'SUPER_ADMIN'">
-      <!-- Form Input Tetap Sama -->
       <div class="card bg-dark border border-secondary border-opacity-25 rounded-4 shadow-sm mb-4">
         <div class="card-body p-3">
           <h6 class="fw-bold text-white mb-3" style="font-size: 0.9rem;">Daftarkan Petugas Baru</h6>
@@ -124,35 +121,36 @@
         </div>
       </div>
 
-      <!-- PERBAIKAN: List Users menggunakan Card Layout yang ramah HP -->
+      <!-- DAFTAR PENGGUNA SISTEM -->
       <div>
-        <h6 class="fw-bold text-secondary mb-3" style="font-size: 0.8rem;">DAFTAR PENGGUNA SISTEM</h6>
+        <h6 class="fw-bold text-secondary mb-3" style="font-size: 0.8rem;">DAFTAR PETUGAS AKTIF</h6>
         
         <div v-if="usersPending" class="text-center py-4 text-secondary small">
           <div class="spinner-border text-primary spinner-border-sm mb-2" role="status"></div>
           <div>Memuat data...</div>
         </div>
         
+        <!-- Menampilkan pesan jika tidak ada petugas (selain Super Admin) -->
+        <div v-else-if="filteredUsers.length === 0" class="text-center py-4 border border-secondary border-opacity-25 rounded-4 bg-dark shadow-sm">
+          <p class="text-secondary mb-0 small">Belum ada akun petugas yang didaftarkan.</p>
+        </div>
+
         <div v-else class="d-flex flex-column gap-3">
-          <div v-for="user in users" :key="user.id" class="card bg-dark border border-secondary border-opacity-25 p-3 rounded-4 shadow-sm">
+          <!-- PERBAIKAN: Menggunakan filteredUsers alih-alih users -->
+          <div v-for="user in filteredUsers" :key="user.id" class="card bg-dark border border-secondary border-opacity-25 p-3 rounded-4 shadow-sm">
             <div class="d-flex justify-content-between align-items-start mb-2">
               <div>
                 <h6 class="fw-bold text-white mb-1">{{ user.name }}</h6>
                 <div class="text-secondary small">{{ user.email }}</div>
               </div>
-              <span class="badge" style="font-size: 0.65rem;" :class="user.role === 'SUPER_ADMIN' ? 'bg-primary text-dark' : 'bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25'">
+              <span class="badge bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25" style="font-size: 0.65rem;">
                 {{ user.role }}
               </span>
             </div>
             
             <div class="d-flex gap-2 mt-2 pt-2 border-top border-secondary border-opacity-25">
-              <template v-if="user.id !== authUser?.id">
-                <button @click="resetPassword(user.id)" class="btn btn-outline-warning btn-sm rounded-pill w-100 fw-bold py-2" style="font-size: 0.75rem;">Reset Sandi</button>
-                <button @click="deleteUser(user.id)" class="btn btn-outline-danger btn-sm rounded-pill w-100 fw-bold py-2" style="font-size: 0.75rem;">Hapus</button>
-              </template>
-              <template v-else>
-                <button class="btn btn-secondary btn-sm rounded-pill w-100 fw-bold py-2 opacity-50" style="font-size: 0.75rem;" disabled>Akun Anda Saat Ini</button>
-              </template>
+              <button @click="resetPassword(user.id)" class="btn btn-outline-warning btn-sm rounded-pill w-100 fw-bold py-2" style="font-size: 0.75rem;">Reset Sandi</button>
+              <button @click="deleteUser(user.id)" class="btn btn-outline-danger btn-sm rounded-pill w-100 fw-bold py-2" style="font-size: 0.75rem;">Hapus</button>
             </div>
           </div>
         </div>
@@ -192,7 +190,8 @@ const saveField = async () => {
 const editField = (field) => {
   isEditingField.value = true
   fieldForm.value = { ...field }
-
+  
+  // Memastikan form otomatis ter-scroll ke atas saat edit ditekan
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
@@ -216,6 +215,12 @@ const deleteField = async (id) => {
 
 // === LOGIKA USERS / PETUGAS ===
 const { data: users, pending: usersPending, refresh: refreshUsers } = await useFetch('/api/users', { server: false })
+
+// PERBAIKAN: Computed property untuk menyembunyikan SUPER_ADMIN dari daftar
+const filteredUsers = computed(() => {
+  if (!users.value) return []
+  return users.value.filter(u => u.role !== 'SUPER_ADMIN')
+})
 
 const userForm = ref({ name: '', email: '', password: '', role: 'PETUGAS' })
 

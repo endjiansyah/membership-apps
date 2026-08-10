@@ -1,21 +1,39 @@
 <template>
   <div class="container-fluid px-1 px-md-3 py-2 py-md-3 pb-5 mb-5" style="max-width: 600px;">
     
+    <!-- NOTIFIKASI TOAST (Pengganti alert() bawaan browser) -->
+    <div v-if="toast.show" class="position-fixed top-0 start-50 translate-middle-x mt-4" style="z-index: 1100; transition: 0.3s ease-in-out;">
+      <div class="badge px-4 py-2 fs-6 shadow-lg border" :class="toast.type === 'success' ? 'bg-success text-white border-success' : 'bg-danger text-white border-danger'">
+        {{ toast.message }}
+      </div>
+    </div>
+
     <!-- TOP HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4 p-2">
       <h4 class="mb-0 fw-bold text-white">Scan Check-in</h4>
-      <span class="badge bg-success bg-opacity-25 text-success border border-success px-3 py-2 rounded-pill fw-bold">
-        LIVE
+      <span class="badge bg-success bg-opacity-25 text-success border border-success px-3 py-2 rounded-pill fw-bold d-flex align-items-center gap-1">
+        <span class="spinner-grow spinner-grow-sm text-success" style="width: 10px; height: 10px;"></span> LIVE
       </span>
     </div>
 
     <!-- AREA KAMERA / SCANNER -->
-    <div v-show="!scannedMember" class="bg-black rounded-4 overflow-hidden mb-4 position-relative shadow">
+    <div v-show="!scannedMember" class="bg-black rounded-4 overflow-hidden mb-4 position-relative shadow border border-secondary border-opacity-25">
       <div class="p-2 bg-dark text-center border-bottom border-secondary border-opacity-25">
         <small class="fw-bold text-secondary text-uppercase" style="font-size: 0.75rem;">Arahkan QR Code ke Kamera</small>
       </div>
       
-      <div id="reader" class="w-100 bg-black" style="aspect-ratio: 1 / 1;"></div>
+      <!-- JIKA KAMERA DIBLOKIR / ERROR -->
+      <div v-if="cameraError" class="d-flex flex-column justify-content-center align-items-center p-4 text-center bg-dark" style="aspect-ratio: 1 / 1;">
+        <Icon name="bi:camera-video-off" class="text-danger mb-3" style="font-size: 3rem;" />
+        <h6 class="text-white fw-bold mb-1">Akses Kamera Ditolak</h6>
+        <p class="text-secondary small mb-3">Izinkan browser mengakses kamera, lalu coba lagi.</p>
+        <button @click="startScanner" class="btn btn-primary rounded-pill fw-bold text-dark px-4 py-2" style="font-size: 0.8rem;">
+          Coba Muat Ulang
+        </button>
+      </div>
+
+      <!-- JIKA KAMERA NORMAL -->
+      <div v-else id="reader" class="w-100 bg-black" style="aspect-ratio: 1 / 1;"></div>
       
       <div v-if="isLoading" class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex flex-column justify-content-center align-items-center" style="z-index: 10;">
         <div class="spinner-border text-primary mb-2" role="status"></div>
@@ -24,9 +42,8 @@
     </div>
 
     <!-- KARTU HASIL SCAN (PROFIL & AKSI) -->
-    <!-- PERBAIKAN: Padding dikurangi jadi p-3 -->
     <div v-if="scannedMember" class="card border border-secondary border-opacity-25 shadow-lg rounded-4 bg-dark text-white mb-3">
-      <div class="card-body p-3">
+      <div class="card-body p-3 p-md-4">
         
         <!-- Area Avatar & Identitas Utama -->
         <div class="text-center mb-3">
@@ -41,15 +58,13 @@
             </span>
           </div>
 
-          <!-- PERBAIKAN: Font size judul dan ID disesuaikan -->
           <h5 class="fw-bold text-white mb-1" style="font-size: 1.1rem;">{{ scannedMember.name }}</h5>
           <p class="text-secondary font-monospace mb-0" style="font-size: 0.75rem;">ID: {{ scannedMember.uuid }}</p>
         </div>
 
         <!-- Peringatan Kunjungan Ganda -->
-        <!-- PERBAIKAN: Padding dan font size peringatan -->
-        <div v-if="scannedMember.visitedToday" class="alert bg-warning bg-opacity-25 border border-warning text-warning py-1 px-2 rounded-3 mb-3 fw-bold text-center shadow-sm" style="font-size: 0.75rem;">
-          ⚠️ Member ini sudah check-in hari ini.
+        <div v-if="scannedMember.visitedToday" class="alert bg-warning bg-opacity-25 border border-warning text-warning py-2 px-3 rounded-3 mb-3 fw-bold text-center shadow-sm" style="font-size: 0.8rem;">
+          <Icon name="bi:exclamation-triangle-fill" class="me-1" /> Member ini sudah check-in hari ini.
         </div>
 
         <!-- Statistik Kehadiran -->
@@ -85,7 +100,6 @@
         </div>
 
         <!-- Tombol Aksi Utama -->
-        <!-- PERBAIKAN: Tombol dirampingkan jadi py-2 dan font 0.85rem -->
         <div class="d-flex flex-column gap-2 mt-3 pt-3 border-top border-secondary border-opacity-25">
           <template v-if="!scannedMember.isActive">
             <button @click="modal.step = 'CONFIRM_ACTIVATE'" class="btn btn-success w-100 fw-bold rounded-pill shadow py-2" style="font-size: 0.85rem;">
@@ -112,10 +126,8 @@
 
     <!-- MODAL KONFIRMASI SMART FLOW -->
     <div v-if="modal.step !== ''" class="position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-75 d-flex justify-content-center align-items-center px-3" style="z-index: 1060; backdrop-filter: blur(4px);">
-      <!-- PERBAIKAN MODAL: max-width 300px, padding p-3 -->
       <div class="card border border-secondary border-opacity-50 bg-dark rounded-4 p-3 text-center shadow-lg text-white w-100" style="max-width: 300px;">
         
-        <!-- SEMUA TOMBOL DI DALAM MODAL DIJADIKAN py-2 DAN FONT 0.8rem -->
         <template v-if="modal.step === 'CONFIRM_NONACTIVE_RECORD'">
           <h6 class="fw-bold text-danger mb-2" style="font-size: 0.95rem;">Konfirmasi Pencatatan</h6>
           <p class="text-secondary mb-3" style="font-size: 0.75rem;">Status Member ini Non-Aktif. Ingin mengaktifkannya dulu?</p>
@@ -166,13 +178,40 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 
-// (KODE SCRIPT SAMA PERSIS, TIDAK ADA LOGIKA YANG BERUBAH)
 const scannedMember = ref(null)
 const isLoading = ref(false)
 const isProcessing = ref(false)
+const cameraError = ref(false) // State baru untuk menangani error kamera
 let html5QrcodeScanner = null
-
 const modal = ref({ step: '' }) 
+
+// Sistem Toast Notification Kustom (Mengganti fungsi alert bawaan)
+const toast = ref({ show: false, message: '', type: 'success' })
+let toastTimeout = null
+const showToast = (message, type = 'success') => {
+  toast.value = { show: true, message, type }
+  if (toastTimeout) clearTimeout(toastTimeout)
+  toastTimeout = setTimeout(() => { toast.value.show = false }, 3000)
+}
+
+// Fitur Getar & Suara "Beep" ala Kasir (Memakai AudioContext bawaan Browser)
+const triggerSensoryFeedback = () => {
+  if (navigator.vibrate) navigator.vibrate(200) // HP Bergetar
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const osc = ctx.createOscillator()
+    const gainNode = ctx.createGain()
+    osc.connect(gainNode)
+    gainNode.connect(ctx.destination)
+    osc.type = 'sine'
+    osc.frequency.value = 850 // Nada tinggi pendek
+    gainNode.gain.setValueAtTime(0.1, ctx.currentTime) // Volume aman di telinga
+    osc.start()
+    osc.stop(ctx.currentTime + 0.15)
+  } catch (e) {
+    // Abaikan jika browser lawas tidak mendukung suara beep buatan
+  }
+}
 
 const getInitials = (name) => {
   if (!name) return '?'
@@ -188,6 +227,7 @@ const parseDynamicData = (data) => {
 }
 
 const startScanner = async () => {
+  cameraError.value = false
   const { Html5Qrcode } = await import('html5-qrcode')
   html5QrcodeScanner = new Html5Qrcode("reader")
   
@@ -204,11 +244,18 @@ const startScanner = async () => {
     { facingMode: "environment" },
     config,
     async (decodedText) => {
+      // 1. Matikan kamera agar tidak scan berkali-kali
       if (html5QrcodeScanner.isScanning) await html5QrcodeScanner.stop()
+      // 2. Bunyikan Beep dan Getar HP
+      triggerSensoryFeedback()
+      // 3. Tarik data
       fetchMemberData(decodedText)
     },
-    () => {}
-  ).catch(err => console.error("Kamera gagal dimuat", err))
+    () => {} // Abaikan pesan error pemindaian per-frame
+  ).catch(err => {
+    console.error("Kamera gagal dimuat", err)
+    cameraError.value = true
+  })
 }
 
 const fetchMemberData = async (uuid) => {
@@ -218,8 +265,9 @@ const fetchMemberData = async (uuid) => {
     const response = await $fetch(`/api/attendance/check?uuid=${uuid}`)
     scannedMember.value = response
   } catch (error) {
-    alert(error.data?.statusMessage || 'QR Code tidak dikenali.')
-    startScanner()
+    showToast(error.data?.statusMessage || 'QR Code tidak dikenali atau salah format.', 'error')
+    // Beri jeda 1 detik sebelum menyalakan kamera lagi agar pengguna sempat membaca toast
+    setTimeout(() => { startScanner() }, 1500)
   } finally {
     isLoading.value = false
   }
@@ -235,7 +283,7 @@ const executeActivation = async () => {
     scannedMember.value.isActive = true
     modal.value.step = 'POST_ACTIVATE_PROMPT'
   } catch (error) {
-    alert(error.data?.statusMessage || 'Gagal mengaktifkan membership.')
+    showToast(error.data?.statusMessage || 'Gagal mengaktifkan membership.', 'error')
     modal.value.step = ''
   } finally {
     isProcessing.value = false
@@ -257,10 +305,10 @@ const executeRecord = async () => {
       method: 'POST',
       body: { uuid: scannedMember.value?.uuid }
     })
-    alert(`Berhasil mencatat check-in untuk ${scannedMember.value.name}.`)
+    showToast(`Berhasil mencatat check-in untuk ${scannedMember.value.name}.`, 'success')
     resetScanner()
   } catch (error) {
-    alert(error.data?.statusMessage || 'Gagal mencatat check-in.')
+    showToast(error.data?.statusMessage || 'Gagal mencatat check-in.', 'error')
     modal.value.step = ''
   } finally {
     isProcessing.value = false
